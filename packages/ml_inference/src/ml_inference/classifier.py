@@ -34,10 +34,11 @@ class TRLOrdinalClassifier:
             # Configured for ordinal regression with Huber/L1 loss (penalizes distance)
             self.model = lgb.LGBMRegressor(
                 objective="regression_l1",
-                n_estimators=100,
-                learning_rate=0.05,
-                max_depth=4,
-                num_leaves=15,
+                n_estimators=50,
+                learning_rate=0.1,
+                max_depth=3,
+                num_leaves=7,
+                min_child_samples=1,
                 random_state=42,
                 verbosity=-1
             )
