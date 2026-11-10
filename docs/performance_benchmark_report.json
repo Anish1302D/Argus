@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-10T16:18:16Z",
+    "python_version": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "win32",
+    "device_cpu_count": 8,
+    "baseline_rss_mb": 18.82,
+    "post_import_rss_mb": 146.82,
+    "total_documents": 5,
+    "total_pages": 361,
+    "total_wall_clock_time_sec": 13.8695,
+    "average_latency_per_doc_sec": 2.7739,
+    "overall_peak_process_rss_mb": 179.35
+  },
+  "per_document_metrics": [
+    {
+      "file_name": "dpo_paper.pdf",
+      "file_size_mb": 1.24,
+      "page_count": 27,
+      "predicted_trl": 1,
+      "confidence": 0.55,
+      "latency_sec": 0.9694,
+      "rss_before_mb": 147.11,
+      "rss_after_mb": 152.16,
+      "peak_rss_mb": 155.92,
+      "rss_delta_mb": 5.05
+    },
+    {
+      "file_name": "gpt3_paper.pdf",
+      "file_size_mb": 6.45,
+      "page_count": 75,
+      "predicted_trl": 1,
+      "confidence": 0.55,
+      "latency_sec": 1.8943,
+      "rss_before_mb": 152.18,
+      "rss_after_mb": 154.27,
+      "peak_rss_mb": 161.5,
+      "rss_delta_mb": 2.09
+    },
+    {
+      "file_name": "instruct_gpt_paper.pdf",
+      "file_size_mb": 1.71,
+      "page_count": 68,
+      "predicted_trl": 1,
+      "confidence": 0.55,
+      "latency_sec": 1.7844,
+      "rss_before_mb": 154.25,
+      "rss_after_mb": 154.46,
+      "peak_rss_mb": 161.5,
+      "rss_delta_mb": 0.21
+    },
+    {
+      "file_name": "llm_survey_zhao.pdf",
+      "file_size_mb": 5.58,
+      "page_count": 144,
+      "predicted_trl": 3,
+      "confidence": 0.9,
+      "latency_sec": 6.9215,
+      "rss_before_mb": 153.7,
+      "rss_after_mb": 152.96,
+      "peak_rss_mb": 179.35,
+      "rss_delta_mb": -0.74
+    },
+    {
+      "file_name": "mllm_survey.pdf",
+      "file_size_mb": 1.73,
+      "page_count": 47,
+      "predicted_trl": 1,
+      "confidence": 0.55,
+      "latency_sec": 2.2773,
+      "rss_before_mb": 153.03,
+      "rss_after_mb": 156.68,
+      "peak_rss_mb": 179.35,
+      "rss_delta_mb": 3.65
+    }
+  ]
+}

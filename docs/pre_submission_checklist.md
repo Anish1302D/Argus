@@ -16,10 +16,18 @@
 
 ---
 
-## 2. Technical Performance & Resource Limits
+## 2. Technical Performance & Resource Limits (Empirically Measured)
 
-- [x] **Execution Speed:** Benchmarked locally at **8.36 ms** average per document on standard commodity CPU. Well within any execution speed limits.
-- [x] **Memory Footprint:** Peak memory consumption is **~20 KB** above baseline Python process, well below any memory ceiling (< 16 GB).
+Measured across realistic 30–100+ page technical PDFs (arXiv public technical papers, 361 total pages):
+- [x] **Execution Speed:** Average end-to-end latency of **2.77 s** per document (**38.42 ms** per page) on standard commodity CPU.
+  - 47-page paper (`mllm_survey.pdf`): 2.28 s
+  - 68-page paper (`instruct_gpt_paper.pdf`): 1.78 s
+  - 75-page paper (`gpt3_paper.pdf`): 1.89 s
+  - 144-page paper (`llm_survey_zhao.pdf`): 6.92 s
+- [x] **Memory Footprint (Peak Process RSS):**
+  - Baseline Python Process: **18.82 MB**
+  - Post-Import & Model/Package Load: **146.82 MB**
+  - Overall Peak Process RSS during extraction & inference: **179.35 MB** (well within standard 2 GB–16 GB competition execution limits).
 - [x] **Supported Input Formats:** Seamlessly ingests both PDF files (via `pypdfium2`) and raw text/markdown documents (`.txt`, `.md`).
 - [x] **Prompt Injection Defense:** Untrusted document payloads are neutralized: dangerous hidden zero-width unicode characters are stripped, and role-override payloads are flagged.
 
@@ -32,15 +40,14 @@
 
 ---
 
-## 4. Local Validation Metrics (Document-Level Split)
+## 4. Local Validation Metrics Status
 
-Evaluated across $n = 9$ approved NASA/DoD/ESA benchmark cases with certified TRL ground truth:
-- **Evaluation Strategy:** Document-Level 3-Fold Cross-Validation (zero document leakage).
-- **Quadratic Weighted Kappa (QWK):** **0.2930**
-- **Mean Absolute Error (MAE):** **2.1111**
-- **Exact Accuracy:** **44.4%**
-- **Macro Precision:** **35.6%**
-- **Statistical Note:** Sample size ($n = 9$) is small; per evaluation rigor rules, results are reported with exact sample size and marked as baseline benchmark indicators.
+- **Status:** **PENDING OFFICIAL LABELLED DATASET**
+- In strict adherence to competition data integrity rules:
+  - All prior agent-authored benchmark cases in `data/approved_benchmarks` have been permanently deleted.
+  - Prior synthetic validation metrics (`local_validation_report.json`) have been retracted.
+  - Machine learning model fitting (LightGBM) is disabled; the pipeline currently runs in pure deterministic rule-based adjudication mode.
+  - Official metrics (QWK, MAE, exact accuracy, macro precision) will be evaluated strictly on the official dataset once released by the organizers. Zero synthetic labels or invented metrics are reported.
 
 ---
 

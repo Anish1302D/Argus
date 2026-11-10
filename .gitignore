@@ -53,6 +53,7 @@ outputs/
 temp/
 logs/
 *.log
+data/sample_evaluation_docs/
 
 # Official Competition Materials (confidential / not for public commit)
 docs/official/*.pdf
