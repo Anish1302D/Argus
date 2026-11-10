@@ -9,11 +9,13 @@ import argparse
 import sys
 from pathlib import Path
 
-# Add core and competition_engine packages to path if running directly
+# Add all modular package src directories to path
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1] if (SCRIPT_DIR.name == "competition_engine") else SCRIPT_DIR
-sys.path.insert(0, str(REPO_ROOT / "packages" / "core" / "src"))
-sys.path.insert(0, str(REPO_ROOT / "packages" / "competition_engine" / "src"))
+for pkg in ["core", "document_processing", "ml_inference", "retrieval", "agent_orchestration", "competition_engine"]:
+    pkg_src = REPO_ROOT / "packages" / pkg / "src"
+    if pkg_src.exists() and str(pkg_src) not in sys.path:
+        sys.path.insert(0, str(pkg_src))
 
 from competition_engine.runner import run_pipeline
 

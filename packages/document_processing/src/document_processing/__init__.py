@@ -1,7 +1,9 @@
 """
 Document Processing Package (Layer 1).
-Handles PDF extraction (via pypdfium2/pdfminer), OCR fallback, layout analysis, and untrusted payload defense.
+Handles PDF and text extraction with untrusted payload sanitization.
 """
 
-__version__ = "0.1.0"
+from document_processing.extractor import DocumentExtractor
 
+__all__ = ["DocumentExtractor"]
+__version__ = "0.1.0"

@@ -1,7 +1,10 @@
 """
 ML Inference Package (Layer 2).
-Provides feature extraction, domain embeddings (SciBERT/SPECTER2), ordinal TRL classification (LightGBM/CORAL), and SHAP explainability.
+Provides feature extraction, evidence mining, LightGBM ordinal modeling, and rule adjudication.
 """
 
-__version__ = "0.1.0"
+from ml_inference.classifier import TRLOrdinalClassifier
+from ml_inference.features import FeatureExtractor
 
+__all__ = ["TRLOrdinalClassifier", "FeatureExtractor"]
+__version__ = "0.1.0"
