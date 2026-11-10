@@ -19,6 +19,7 @@
 ## 2. Technical Performance & Resource Limits (Empirically Measured)
 
 Measured across realistic 30–100+ page technical PDFs (arXiv public technical papers, 361 total pages):
+
 - [x] **Execution Speed:** Average end-to-end latency of **2.77 s** per document (**38.42 ms** per page) on standard commodity CPU.
   - 47-page paper (`mllm_survey.pdf`): 2.28 s
   - 68-page paper (`instruct_gpt_paper.pdf`): 1.78 s
@@ -67,7 +68,7 @@ Measured across realistic 30–100+ page technical PDFs (arXiv public technical 
 ## 6. Submission Strategy (3 Attempts)
 
 | Attempt | Date | Objective | Feedback Utilized |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Attempt 1** | **12 Nov 2026** | **Diagnostic Submission:** Submit standalone runnable package to test organizer automated test harness, execution speed, and dependency check pass/fail. | Receive operational execution status and benchmark score diagnostics. |
 | **Attempt 2** | **13–14 Nov 2026** | **Refinement Submission:** Adjust thresholds, calibration, or schema adapters based on Attempt 1 diagnostics. | Verify improved benchmark score. |
 | **Attempt 3** | **15 Nov 2026 (before 23:59 IST)** | **Final Code Freeze:** Final immutable submission for official Stage 1 ranking and code freeze. | Official competition ranking. |

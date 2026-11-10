@@ -73,3 +73,14 @@ pythonpath = [
 ]
 addopts = "-v --strict-markers"
 
+[tool.pyright]
+extraPaths = [
+    "packages/core/src",
+    "packages/document_processing/src",
+    "packages/ml_inference/src",
+    "packages/retrieval/src",
+    "packages/agent_orchestration/src",
+    "packages/competition_engine/src"
+]
+
+
