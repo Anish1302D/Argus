@@ -1,0 +1,3 @@
+Optical Quantum Sensor Prototype for Atmospheric Gas Analysis
+
+Abstract: We report on laboratory testing and experimental validation of an integrated quantum sensor. The prototype was constructed on a breadboard and subjected to controlled bench tests over 120 hours. The component assembly successfully demonstrated target sensitivity thresholds in laboratory environment.

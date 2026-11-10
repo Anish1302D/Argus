@@ -221,3 +221,4 @@ class FeatureExtractor:
         if has_metrics:
             return EvidenceStrength.STRONG_SUPPORTING
         return EvidenceStrength.MODERATE_SUPPORTING
+

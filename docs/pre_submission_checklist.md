@@ -64,3 +64,4 @@ Evaluated across $n = 9$ approved NASA/DoD/ESA benchmark cases with certified TR
 | **Attempt 1** | **12 Nov 2026** | **Diagnostic Submission:** Submit standalone runnable package to test organizer automated test harness, execution speed, and dependency check pass/fail. | Receive operational execution status and benchmark score diagnostics. |
 | **Attempt 2** | **13–14 Nov 2026** | **Refinement Submission:** Adjust thresholds, calibration, or schema adapters based on Attempt 1 diagnostics. | Verify improved benchmark score. |
 | **Attempt 3** | **15 Nov 2026 (before 23:59 IST)** | **Final Code Freeze:** Final immutable submission for official Stage 1 ranking and code freeze. | Official competition ranking. |
+

@@ -34,31 +34,39 @@ def package_submission():
     shutil.copy2(ROOT_DIR / "run_inference.py", SUBMISSION_DIR / "run_inference.py")
     print("Copied run_inference.py -> submission/run_inference.py")
 
-    # 3. Create standalone requirements.txt
+    # 3. Create standalone requirements.txt with exact pinned versions
     reqs_content = """# Standalone Stage 1 Competition Dependencies (Apache-2.0 / MIT / BSD-3 only)
-pydantic>=2.10.0,<3.0.0
-pypdfium2>=4.30.0
-pdfplumber>=0.11.0
-pdfminer.six>=20260107
-lightgbm>=4.5.0
-scikit-learn>=1.6.0
-numpy>=1.24.0
-rank-bm25>=0.2.2
+pydantic==2.13.4
+pypdfium2==5.15.2
+pdfplumber==0.11.10
+pdfminer.six==20260107
+lightgbm==4.7.0
+scikit-learn==1.9.0
+numpy==2.5.2
+rank-bm25==0.2.2
 """
     (SUBMISSION_DIR / "requirements.txt").write_text(reqs_content, encoding="utf-8")
-    print("Generated submission/requirements.txt")
+    print("Generated submission/requirements.txt with exact pinned versions")
 
     # 4. Create standalone submission README
     readme_content = """# TRL Debate Engine — Stage 1 Standalone Submission
 
-**Competition:** Techfest 2026–27 | 2nd APCTT Hackathon 2026
-**Challenge:** AI for Technology Readiness
-**License:** Apache License 2.0
-**Deployment:** Air-Gapped Standalone Inference Pipeline
+**Competition:** Techfest 2026–27 | 2nd APCTT Hackathon 2026  
+**Challenge:** AI for Technology Readiness  
+**License:** Apache License 2.0  
+**Deployment:** Air-Gapped Standalone Inference Pipeline  
 
 ---
 
-## 1. Quick Start
+## 1. Operating Mode & Compliance
+- **Adjudication Engine:** Deterministic rule-based criteria ladder with implied prerequisites.
+- **Data Integrity:** Zero synthetic data or derived labels used for training. LightGBM fitting is disabled until official labelled benchmark training data is provided by the organizers.
+- **Zero Hosted APIs:** No dependency on external web services, OpenAI, Anthropic, or external networks.
+- **Licensing:** Uses only Apache-2.0, MIT, and BSD-3 compliant libraries. AGPL libraries (e.g. PyMuPDF) are strictly excluded.
+
+---
+
+## 2. Quick Start
 
 ### Installation
 In an isolated Python 3.10+ environment:
@@ -71,30 +79,31 @@ pip install -r requirements.txt
 python run_inference.py --input <path_to_input_document> --output <path_to_output_json>
 ```
 
-Example on a technical document:
+Example:
 ```bash
 python run_inference.py --input sample_doc.pdf --output output.json
 ```
-
----
-
-## 2. Technical Characteristics
-- **Zero Hosted APIs:** Does not use OpenAI, Anthropic, or external API endpoints.
-- **Air-Gapped & Offline:** Operates with 100% local weights, feature extraction, and ordinal rules.
-- **Latency:** ~10ms per document on standard commodity CPU.
-- **Memory Footprint:** < 25 MB RAM.
-- **Licensing:** Fully compatible with Apache License 2.0.
 """
     (SUBMISSION_DIR / "README.md").write_text(readme_content, encoding="utf-8")
     print("Generated submission/README.md")
 
-    # 5. Verify standalone execution in submission directory
-    test_doc = ROOT_DIR / "data" / "approved_benchmarks" / "nasa_case_trl_4.txt"
+    # 5. Create a sample document fixture in submission/samples
+    samples_dir = SUBMISSION_DIR / "samples"
+    samples_dir.mkdir(parents=True, exist_ok=True)
+    sample_doc = samples_dir / "sample_synthetic_lab_report.txt"
+    sample_doc.write_text(
+        "Optical Quantum Sensor Prototype for Atmospheric Gas Analysis\n\n"
+        "Abstract: We report on laboratory testing and experimental validation of an integrated quantum sensor. "
+        "The prototype was constructed on a breadboard and subjected to controlled bench tests over 120 hours. "
+        "The component assembly successfully demonstrated target sensitivity thresholds in laboratory environment.",
+        encoding="utf-8"
+    )
+
     test_out = SUBMISSION_DIR / "test_verification_output.json"
 
     print("Verifying standalone execution in submission directory...")
     res = subprocess.run(
-        [sys.executable, str(SUBMISSION_DIR / "run_inference.py"), "--input", str(test_doc), "--output", str(test_out)],
+        [sys.executable, str(SUBMISSION_DIR / "run_inference.py"), "--input", str(sample_doc), "--output", str(test_out)],
         capture_output=True,
         text=True,
         cwd=str(SUBMISSION_DIR)
@@ -110,3 +119,4 @@ python run_inference.py --input sample_doc.pdf --output output.json
 
 if __name__ == "__main__":
     package_submission()
+

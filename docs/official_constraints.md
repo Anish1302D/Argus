@@ -58,3 +58,11 @@ Because this compressed PDF is the broad competition brief, the October 10 suppl
 3. The **exact packaging / CLI invocation format**
 4. The **mathematical formula for "Ordinal Accuracy & Precision"**
 must be acquired from the team portal / registered email or maintained strictly behind modular adapters without guessing.
+
+### 4.1 Data Integrity & Adjudication Mode
+- All agent-authored benchmark cases in `data/approved_benchmarks` have been deleted.
+- `docs/local_validation_report.json` is retracted.
+- No LightGBM model fitted on synthetic data will be shipped.
+- The standalone engine runs in **deterministic rule-based adjudication mode only** until official labelled data with verifiable primary-source provenance is provided by the organizers.
+
+

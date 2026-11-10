@@ -141,3 +141,4 @@ class DocumentExtractor:
                 "file_size_bytes": path.stat().st_size,
             }
         )
+

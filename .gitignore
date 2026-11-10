@@ -54,3 +54,9 @@ temp/
 logs/
 *.log
 
+# Official Competition Materials (confidential / not for public commit)
+docs/official/*.pdf
+tests/fixtures/
+submission/test_verification_output.json
+
+
