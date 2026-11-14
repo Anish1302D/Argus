@@ -1,75 +1,107 @@
-# Pre-Submission Checklist: Stage 1 Candidate
+# Argus — Pre-Submission Verification Checklist
 
-**Competition:** Techfest 2026–27 | 2nd APCTT Hackathon 2026  
-**Target Milestone:** Attempt 1 Diagnostic Candidate (Target: 12 Nov 2026)  
-**Final Freeze Deadline:** 15 Nov 2026, 23:59 IST  
-**Package Path:** `submission/`
-
----
-
-## 1. Compliance & Disqualification Triggers
-
-- [x] **Zero Private / Undisclosed API Keys:** Verified. The inference pipeline contains no API keys and makes no external network calls (complies with Rule 6: *"Use of undisclosed private API keys, hardcoded output schemas, or plagiarism will result in immediate disqualification"*).
-- [x] **Zero Unauthorized External Tools:** Verified. Runs 100% locally on CPU without hosted endpoints or cloud model inference (complies with Rule 7: *"The use of unauthorized external AI tools during live rounds is strictly prohibited"*).
-- [x] **Apache 2.0 License Compliance:** Verified. Every library in `submission/requirements.txt` is licensed under permissive Apache-2.0, MIT, or BSD-3. Strongly copyleft libraries (such as AGPL PyMuPDF) have been completely excluded and replaced with `pypdfium2` and `pdfminer.six`.
-- [x] **Originality & Code Freeze:** Submissions are original work developed for the APCTT challenge. Ready to be frozen for Stage 1.
+**Competition:** Techfest 2026–27 · 2nd APCTT Hackathon 2026  
+**Canonical repository:** Anish1302D/Argus  
+**Base branch:** main  
+**Stabilization branch:** fix/argus-pre-submission-stabilization  
+**Submission target:** 15 Nov 2026, 23:59 IST  
+**Submission bundle:** submission/
 
 ---
 
-## 2. Technical Performance & Resource Limits (Empirically Measured)
+## 1. Verification status
 
-Measured across realistic 30–100+ page technical PDFs (arXiv public technical papers, 361 total pages):
+The supplied read-only audit was performed against the predecessor TRL Debate Engine codebase at 15 Nov 2026, 01:21 IST. It reported 38/38 existing tests passing before the stabilization changes described below.
 
-- [x] **Execution Speed:** Average end-to-end latency of **2.77 s** per document (**38.42 ms** per page) on standard commodity CPU.
-  - 47-page paper (`mllm_survey.pdf`): 2.28 s
-  - 68-page paper (`instruct_gpt_paper.pdf`): 1.78 s
-  - 75-page paper (`gpt3_paper.pdf`): 1.89 s
-  - 144-page paper (`llm_survey_zhao.pdf`): 6.92 s
-- [x] **Memory Footprint (Peak Process RSS):**
-  - Baseline Python Process: **18.82 MB**
-  - Post-Import & Model/Package Load: **146.82 MB**
-  - Overall Peak Process RSS during extraction & inference: **179.35 MB** (well within standard 2 GB–16 GB competition execution limits).
-- [x] **Supported Input Formats:** Seamlessly ingests both PDF files (via `pypdfium2`) and raw text/markdown documents (`.txt`, `.md`).
-- [x] **Prompt Injection Defense:** Untrusted document payloads are neutralized: dangerous hidden zero-width unicode characters are stripped, and role-override payloads are flagged.
+That result is a **baseline only**. It is not a test result for the current Argus stabilization branch. Re-run all checks against the final commit before submission and record the exact commit SHA, environment, command, and output.
 
----
+## 2. Changes made on the Argus stabilization branch
 
-## 3. Schema & Adapter Decoupling
-
-- [x] **Decoupled Output Schema:** Core pipeline emits canonical `FinalAssessment` objects. The output serialization is handled exclusively by `BaseOutputAdapter` / `InternalOutputAdapter`. If the competition organizers supply a distinct JSON or CSV schema, only the adapter format mapping requires an update.
-- [x] **Graceful Failure Handling:** CLI returns clear exit codes (`0` for success, `1` for invalid input or security failure, `2` for syntax error) and writes structured errors to stderr rather than unhandled Python tracebacks.
-
----
-
-## 4. Local Validation Metrics Status
-
-- **Status:** **PENDING OFFICIAL LABELLED DATASET**
-- In strict adherence to competition data integrity rules:
-  - All prior agent-authored benchmark cases in `data/approved_benchmarks` have been permanently deleted.
-  - Prior synthetic validation metrics (`local_validation_report.json`) have been retracted.
-  - Machine learning model fitting (LightGBM) is disabled; the pipeline currently runs in pure deterministic rule-based adjudication mode.
-  - Official metrics (QWK, MAE, exact accuracy, macro precision) will be evaluated strictly on the official dataset once released by the organizers. Zero synthetic labels or invented metrics are reported.
-
----
-
-## 5. Submission Package Contents (`submission/`)
-
-1. `submission/run_inference.py`: Standalone CLI executable.
-2. `submission/packages/`:
-   - `core/`: Canonical domain models, TRL definitions, and adapters.
-   - `document_processing/`: `pypdfium2` PDF and text extractor.
-   - `ml_inference/`: Feature extraction, keyword mining, and LightGBM ordinal adjudication.
-   - `competition_engine/`: Standalone pipeline execution engine.
-3. `submission/requirements.txt`: Minimal pinned dependencies (`lightgbm`, `pypdfium2`, `pdfminer.six`, `pdfplumber`, `pydantic`, `scikit-learn`, `numpy`, `rank-bm25`).
-4. `submission/README.md`: Judge/organizer execution guide.
-
----
-
-## 6. Submission Strategy (3 Attempts)
-
-| Attempt | Date | Objective | Feedback Utilized |
+| Area | Change | Source status | Runtime verification |
 | --- | --- | --- | --- |
-| **Attempt 1** | **12 Nov 2026** | **Diagnostic Submission:** Submit standalone runnable package to test organizer automated test harness, execution speed, and dependency check pass/fail. | Receive operational execution status and benchmark score diagnostics. |
-| **Attempt 2** | **13–14 Nov 2026** | **Refinement Submission:** Adjust thresholds, calibration, or schema adapters based on Attempt 1 diagnostics. | Verify improved benchmark score. |
-| **Attempt 3** | **15 Nov 2026 (before 23:59 IST)** | **Final Code Freeze:** Final immutable submission for official Stage 1 ranking and code freeze. | Official competition ranking. |
+| Frontend interaction | Inactive navigation scrim no longer intercepts pointer events; active scrim remains interactive | Committed | Pending browser regression run |
+| Evidence mining | Candidate milestones with nearby explicit negation are filtered | Committed | Pending test run and sample assessment |
+| ML regression coverage | Added tests for negated flight, absent lab/breadboard milestones, positive flight, and postposed negation | Committed | Pending test run |
+| Standalone bundle | Mirrored negation-aware feature extraction into submission package | Committed | Pending isolated CLI run |
+| CORS | Disabled credentialed CORS while wildcard origins remain configured | Committed | Pending API test |
+| API concurrency | CPU-bound sample/text/file assessment handlers are synchronous FastAPI handlers and can run in its threadpool | Committed | Pending concurrent request test |
+| Product identity | Browser, API metadata, package metadata, README, PRD, CLI docs, and submission docs use Argus | Partially committed | Pending repository-wide branding scan |
 
+## 3. Mandatory pre-submission gates
+
+### Functional verification
+
+- [ ] Backend starts from a clean environment using the documented command.
+- [ ] Frontend loads without console errors.
+- [ ] Desktop navigation, sample buttons, upload control, toggles, filters, and dialogs accept mouse and keyboard input.
+- [ ] Mobile navigation opens and closes correctly; active scrim closes the drawer while inactive scrim does not block the page.
+- [ ] Health endpoint returns the expected service status.
+- [ ] TRL ladder endpoint returns all nine levels.
+- [ ] Sample documents endpoint returns the documented examples.
+- [ ] Text assessment succeeds for a valid technical document.
+- [ ] PDF, TXT, and MD uploads work.
+- [ ] Empty input and unsupported file types return controlled errors.
+- [ ] Strict security mode rejects the supplied prompt-injection sample.
+- [ ] Assessment history and theme preference persist as designed.
+- [ ] Evidence references, criteria, and advancement recommendations render without broken data.
+
+### Negation and assessment regression checks
+
+- [ ] Hypersonic TPS does not award TRL 7 solely from the negated flight-demonstration phrase; expected result is TRL 6.
+- [ ] The malicious injection sample does not receive TRL 3 or TRL 4 from milestones explicitly stated as not performed; expected result is TRL 1.
+- [ ] Positive flight-demonstration evidence remains detectable.
+- [ ] Negated milestones do not inflate the 25-dimensional feature vector or highest-matched-TRL feature.
+- [ ] Quantum Cascade sample result is checked against its expected TRL 4.
+- [ ] CubeSat sample result is checked against its expected TRL 9.
+- [ ] Every mismatch is investigated; do not tune rules merely to force sample labels.
+
+### Security and reliability
+
+- [ ] CORS configuration is verified in the running API.
+- [ ] Upload size limits and file-content validation are reviewed before exposing the API beyond localhost.
+- [ ] Temporary upload files are cleaned up on success and failure.
+- [ ] Error responses do not leak secrets or stack traces.
+- [ ] No private API keys, tokens, or credentials are committed.
+- [ ] CPU-heavy assessment requests do not starve health checks under concurrent load.
+
+### Automated quality checks
+
+- [ ] Full pytest suite passes on the final branch commit.
+- [ ] Frontend interaction regression test passes.
+- [ ] Linting passes using the installed/configured linter.
+- [ ] Production/startup command succeeds from a clean environment.
+- [ ] The final test count and output are recorded without rounding or assumptions.
+
+### Submission bundle
+
+- [ ] Regenerate submission/ from the final source using scripts/package_submission.py.
+- [ ] Confirm the negation-aware implementation is present in the generated bundle.
+- [ ] Install only the bundle's declared requirements in a clean environment.
+- [ ] Run submission/run_inference.py on a sample input.
+- [ ] Verify output JSON schema and exit codes.
+- [ ] Verify air-gapped execution with network access disabled.
+- [ ] Confirm dependency licenses against the competition rules.
+- [ ] Record SHA-256 hashes of the submitted bundle and final source commit.
+
+## 4. Known implementation boundaries
+
+The current release must be described accurately:
+
+- Evidence mining is rule/regex based and does not provide full natural-language understanding.
+- Negation handling is a bounded local heuristic, not a general semantic NLP model.
+- The Optimist/Skeptic/Referee transcript is deterministic review synthesis, not three independent autonomous LLM agents.
+- Hybrid BM25/vector retrieval is not implemented in the active assessment path.
+- A dedicated Next.js application and Supabase persistence are not part of the active implementation.
+- The LightGBM training path must remain disabled for competition inference until permitted, verified labelled training data is available.
+- Confidence values are heuristic and must not be described as calibrated probabilities.
+
+## 5. Release discipline
+
+- [ ] All work is committed on a feature branch created from main.
+- [ ] No direct commits are made to main.
+- [ ] Review the branch diff for unrelated files and accidental secrets.
+- [ ] Open a pull request into main only after all P0/P1 checks pass.
+- [ ] Keep the submission source and package bundle aligned.
+- [ ] Freeze the exact verified commit; do not make untested changes after the freeze.
+
+**Release rule:** A change is complete only when its implementation, relevant regression test, and verification result are all recorded. A commit alone is not proof that a feature works.
