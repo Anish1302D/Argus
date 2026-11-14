@@ -90,17 +90,17 @@ TRL_PATTERNS = {
 # bounded to the containing sentence so unrelated earlier disclaimers do not
 # suppress later, independently stated evidence.
 _NEGATION_BEFORE_RE = re.compile(
-    r"(?i)\\b(?:no|never|without|lack(?:s|ed|ing)?|absence\\s+of|"
-    r"fail(?:s|ed|ure)?\\s+to|unable\\s+to|cannot|can't|hasn't|haven't|"
-    r"hadn't|isn't|aren't|wasn't|weren't|not(?!\\s+(?:only|merely|just)\\b))\\b"
+    r"(?i)\b(?:no|never|without|lack(?:s|ed|ing)?|absence\s+of|"
+    r"fail(?:s|ed|ure)?\s+to|unable\s+to|cannot|can't|hasn't|haven't|"
+    r"hadn't|isn't|aren't|wasn't|weren't|not(?!\s+(?:only|merely|just)\b))\b"
 )
 _NEGATION_AFTER_RE = re.compile(
-    r"(?i)\\b(?:not\\s+(?:yet\\s+)?(?:been\\s+)?|"
-    r"(?:is|are|was|were|has|have|had|will be|would be|could be|should be)\\s+not\\s+(?:yet\\s+)?(?:been\\s+)?)"
+    r"(?i)\b(?:not\s+(?:yet\s+)?(?:been\s+)?|"
+    r"(?:is|are|was|were|has|have|had|will be|would be|could be|should be)\s+not\s+(?:yet\s+)?(?:been\s+)?)"
     r"(?:performed|conducted|completed|achieved|demonstrated|undertaken|executed|"
-    r"carried\\s+out|validated|built|constructed|tested|established|reached|flown|deployed)\\b"
+    r"carried\s+out|validated|built|constructed|tested|established|reached|flown|deployed)\b"
 )
-_SENTENCE_BOUNDARY_RE = re.compile(r"[.!?;\\n]")
+_SENTENCE_BOUNDARY_RE = re.compile(r"[.!?;\n]")
 
 
 def _match_is_negated(text: str, match: re.Match) -> bool:

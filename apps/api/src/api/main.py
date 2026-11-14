@@ -60,7 +60,7 @@ async def health_check():
         "layers": {
             "layer_1_document_processing": "Active (pypdfium2 / UTF-8)",
             "layer_2_ml_inference": "Active (25-dimensional evidence features + deterministic rule adjudication)",
-            "layer_3_review_synthesis": "Active (deterministic Optimist, Skeptic, and Referee review synthesis; no independent LLM agents)",
+            "layer_3_agent_orchestration": "Active (deterministic Optimist, Skeptic, and Referee review synthesis; no independent LLM agents)",
             "layer_4_web_interface": "Active (FastAPI + static Argus research interface)",
         }
     }
