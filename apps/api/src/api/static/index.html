@@ -226,8 +226,8 @@ svg.ico {
 .sys dt { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
 .sys dd { font-size: .8125rem; color: var(--ink-2); line-height: 1.4; }
 
-.scrim { position: fixed; inset: 0; z-index: 60; background: rgb(22 21 15 / .42); opacity: 0; transition: opacity var(--dur-2); }
-.scrim.is-on { opacity: 1; }
+.scrim { position: fixed; inset: 0; z-index: 60; background: rgb(22 21 15 / .42); opacity: 0; pointer-events: none; transition: opacity var(--dur-2); }
+.scrim.is-on { opacity: 1; pointer-events: auto; }
 
 .stage { min-width: 0; display: flex; flex-direction: column; }
 
