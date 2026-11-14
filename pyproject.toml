@@ -58,7 +58,7 @@ all = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["packages/core/src", "packages/document_processing/src", "packages/ml_inference/src", "packages/retrieval/src", "packages/agent_orchestration/src", "packages/competition_engine/src"]
+where = ["packages/core/src", "packages/document_processing/src", "packages/ml_inference/src", "packages/retrieval/src", "packages/agent_orchestration/src", "packages/competition_engine/src", "apps/api/src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,6 +69,7 @@ pythonpath = [
     "packages/retrieval/src",
     "packages/agent_orchestration/src",
     "packages/competition_engine/src",
+    "apps/api/src",
     "."
 ]
 addopts = "-v --strict-markers"
@@ -80,7 +81,8 @@ extraPaths = [
     "packages/ml_inference/src",
     "packages/retrieval/src",
     "packages/agent_orchestration/src",
-    "packages/competition_engine/src"
+    "packages/competition_engine/src",
+    "apps/api/src"
 ]
 
 

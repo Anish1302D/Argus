@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TRL Debate Engine — adversarial multi-agent technology readiness adjudication.">
+  <meta name="color-scheme" content="light dark">
+  <title>TRL Debate Engine — Readiness Adjudication Instrument</title>
+  <script>
+    /* Apply persisted / preferred theme before first paint to avoid a flash. */
+    (function () {
+      try {
+        var t = localStorage.getItem('trlde.theme');
+        if (!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'graphite' : 'paper';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { /* storage unavailable — keep default */ }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap">
+  <style>
+/* ==========================================================================
+   TRL DEBATE ENGINE — "FOLIO" DESIGN SYSTEM
+   A scientific-editorial system: typography carries hierarchy, rules carry
+   structure, colour carries meaning (agents · status · the one accent).
+
+   01 Tokens         05 Components
+   02 Base           06 Views
+   03 Typography     07 Motion
+   04 Shell          08 Responsive · 09 Print
+   ========================================================================== */
+
+/* 01 — TOKENS ------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+  /* Neutral foundation: warm paper + carbon ink */
+  --paper: #F2EFE6;
+  --paper-2: #E9E5D9;          /* sunk surfaces, selection bands */
+  --paper-3: #F8F6F0;          /* raised surfaces (inputs, dialogs) */
+  --ink: #16150F;
+  --ink-2: #3B3930;
+  --ink-3: #676356;            /* ≥ 4.5:1 on paper — smallest readable text */
+  --ink-4: #8F8A7B;            /* decorative / large text only */
+  --rule: #D5CFBF;
+  --rule-2: #B9B29F;
+  /* The one accent: vermilion measurement mark */
+  --accent: #CF4520;
+  --accent-ink: #A9361A;
+  --accent-wash: #F5DFD4;
+  --on-accent: #FFFFFF;
+  /* Agents — restrained, functional */
+  --opt: #1D6B4C;  --opt-wash: #DCE9DE;
+  --skp: #8C5A07;  --skp-wash: #F1E4C8;
+  --ref: #2C3B8F;  --ref-wash: #DFE2F1;
+  /* Semantic */
+  --ok: #2D6A3E;   --ok-wash: #DCE8D8;
+  --warn: #8C5A07; --warn-wash: #F1E4C8;
+  --err: #B0261C;  --err-wash: #F5DBD5;
+
+  --f-display: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --f-sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --fs-display: clamp(5.5rem, 3.4rem + 7vw, 11rem);
+  --fs-h1: clamp(2.125rem, 1.45rem + 2.3vw, 3.625rem);
+  --fs-h2: clamp(1.5rem, 1.25rem + .9vw, 2.0625rem);
+  --fs-h3: 1.1875rem;
+  --fs-lead: clamp(1.125rem, 1.05rem + .3vw, 1.3125rem);
+  --fs-read: 1.125rem;
+  --fs-body: 1rem;
+  --fs-small: .875rem;
+  --fs-label: .75rem;
+
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px;
+
+  --rail-w: 268px;
+  --head-h: 56px;
+  --gutter: clamp(20px, 3.4vw, 56px);
+  --content-max: 1480px;
+  --measure: 68ch;
+  --radius: 2px;
+
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
+  --ease-io: cubic-bezier(.6, 0, .3, 1);
+  --dur-1: 120ms; --dur-2: 220ms; --dur-3: 420ms;
+  --lift: 0 1px 0 var(--rule), 0 18px 40px -24px rgb(22 21 15 / .45);
+  --hatch: repeating-linear-gradient(135deg, var(--accent) 0 1.2px, transparent 1.2px 6px);
+}
+
+html[data-theme="graphite"] {
+  color-scheme: dark;
+  --paper: #131311;
+  --paper-2: #1C1C19;
+  --paper-3: #191916;
+  --ink: #ECE7DA;
+  --ink-2: #CAC4B5;
+  --ink-3: #9C9687;
+  --ink-4: #6B675D;
+  --rule: #2E2D29;
+  --rule-2: #46443D;
+  --accent: #EC6840;
+  --accent-ink: #F2876A;
+  --accent-wash: #3A2219;
+  --on-accent: #140C08;
+  --opt: #66B790;  --opt-wash: #17291F;
+  --skp: #DCA54B;  --skp-wash: #2D2414;
+  --ref: #97A3EF;  --ref-wash: #1C2038;
+  --ok: #72B983;   --ok-wash: #18281B;
+  --warn: #DCA54B; --warn-wash: #2D2414;
+  --err: #F07D71;  --err-wash: #3A1A17;
+  --lift: 0 1px 0 var(--rule), 0 18px 40px -20px rgb(0 0 0 / .7);
+}
+
+/* 02 — BASE -------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--head-h) + 20px); }
+body {
+  margin: 0; min-height: 100vh;
+  background: var(--paper); color: var(--ink);
+  font-family: var(--f-sans); font-size: var(--fs-body); line-height: 1.5;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body.is-locked { overflow: hidden; }
+h1, h2, h3, h4, p, ol, ul, dl, dd, figure, blockquote { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+img, svg { display: block; max-width: 100%; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; text-align: inherit; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: var(--accent-wash); color: var(--ink); }
+[hidden] { display: none !important; }
+svg.ico {
+  width: 18px; height: 18px; flex: none; display: inline-block; vertical-align: -4px;
+  fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter;
+}
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: fixed; left: 12px; top: -80px; z-index: 200; padding: 10px 14px;
+  background: var(--ink); color: var(--paper); font-weight: 600; text-decoration: none;
+}
+.skip-link:focus { top: 12px; }
+.mono { font-family: var(--f-mono); }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* 03 — TYPOGRAPHY -------------------------------------------------------- */
+.eyebrow {
+  font-family: var(--f-mono); font-size: var(--fs-label); font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+}
+.eyebrow b { color: var(--ink); font-weight: 600; }
+.h-display {
+  font-family: var(--f-display); font-weight: 300; font-size: var(--fs-display);
+  line-height: .82; letter-spacing: -.045em; font-variation-settings: "opsz" 72;
+}
+.h1 {
+  font-family: var(--f-display); font-weight: 400; font-size: var(--fs-h1);
+  line-height: 1.04; letter-spacing: -.02em; text-wrap: balance; font-variation-settings: "opsz" 60;
+}
+.h2 {
+  font-family: var(--f-display); font-weight: 400; font-size: var(--fs-h2);
+  line-height: 1.14; letter-spacing: -.012em; text-wrap: balance;
+}
+.h3 { font-family: var(--f-sans); font-weight: 600; font-size: var(--fs-h3); line-height: 1.3; letter-spacing: -.005em; }
+.lead { font-family: var(--f-display); font-size: var(--fs-lead); line-height: 1.5; color: var(--ink-2); max-width: 62ch; text-wrap: pretty; }
+.read { font-family: var(--f-display); font-size: var(--fs-read); line-height: 1.64; max-width: var(--measure); text-wrap: pretty; font-variation-settings: "opsz" 16; }
+.small { font-size: var(--fs-small); color: var(--ink-3); line-height: 1.5; }
+.muted { color: var(--ink-3); }
+.italic { font-style: italic; }
+.wrap-any { overflow-wrap: anywhere; }
+
+/* 04 — SHELL ------------------------------------------------------------- */
+.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); min-height: 100vh; }
+
+/* Index rail — a journal's table of contents, not an icon sidebar */
+.index {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: var(--s-6);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-right: 1px solid var(--rule); background: var(--paper);
+  scrollbar-width: thin;
+}
+.brand__link { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; text-decoration: none; }
+.brand__mark { width: 38px; height: 24px; }
+.brand__mark rect { fill: var(--rule-2); transition: fill var(--dur-3) var(--ease-out); }
+.brand__mark rect.is-met { fill: var(--ink); }
+.brand__mark rect.is-now { fill: var(--accent); }
+.brand__name { font-family: var(--f-display); font-size: 1.4375rem; line-height: 1; letter-spacing: -.015em; }
+.brand__tag { margin-top: 12px; font-size: var(--fs-small); color: var(--ink-3); line-height: 1.4; max-width: 24ch; }
+.brand__close { display: none; }
+
+.idx-group {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--ink);
+}
+.idx-list + .idx-group { margin-top: var(--s-5); }
+.idx-link {
+  display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: baseline; gap: 6px;
+  padding: 9px 2px 9px 10px; margin-left: -12px;
+  border-left: 2px solid transparent; color: var(--ink-2); text-decoration: none;
+  transition: color var(--dur-1), border-color var(--dur-2), background-color var(--dur-2);
+}
+.idx-link:hover { color: var(--ink); border-left-color: var(--rule-2); }
+.idx-link[aria-current="page"] { color: var(--ink); border-left-color: var(--accent); background: linear-gradient(90deg, var(--paper-2), transparent 85%); }
+.idx-num { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); }
+.idx-link[aria-current="page"] .idx-num { color: var(--accent-ink); }
+.idx-name { font-size: .9375rem; font-weight: 500; }
+.idx-meta { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); white-space: nowrap; }
+.idx-link.is-empty .idx-meta { color: var(--ink-4); }
+
+.index__foot { margin-top: auto; padding-top: var(--s-4); border-top: 1px solid var(--rule); }
+.sys summary { list-style: none; display: flex; gap: 8px; align-items: center; cursor: pointer; font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); }
+.sys summary::-webkit-details-marker { display: none; }
+.sys summary::after { content: "+"; margin-left: auto; }
+.sys[open] summary::after { content: "–"; }
+.sys__dot { width: 7px; height: 7px; background: var(--ink-4); flex: none; }
+.sys__dot.is-ok { background: var(--ok); }
+.sys__dot.is-down { background: var(--err); }
+.sys dl { margin-top: 12px; display: grid; gap: 10px; }
+.sys dt { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+.sys dd { font-size: .8125rem; color: var(--ink-2); line-height: 1.4; }
+
+.scrim { position: fixed; inset: 0; z-index: 60; background: rgb(22 21 15 / .42); opacity: 0; transition: opacity var(--dur-2); }
+.scrim.is-on { opacity: 1; }
+
+.stage { min-width: 0; display: flex; flex-direction: column; }
+
+/* Running head — like the header line of a printed journal page */
+.runninghead {
+  position: sticky; top: 0; z-index: 30; height: var(--head-h);
+  display: flex; align-items: center; gap: var(--s-4); padding: 0 var(--gutter);
+  background: var(--paper); border-bottom: 1px solid var(--rule);
+}
+.rh-menu { display: none; }
+.rh-crumb { min-width: 0; flex: 1; display: flex; align-items: baseline; gap: 10px; font-size: var(--fs-small); }
+.rh-sec { font-family: var(--f-mono); font-size: var(--fs-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.rh-sep { color: var(--rule-2); }
+.rh-doc { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--f-display); font-size: 1rem; font-style: italic; }
+.rh-tools { display: flex; align-items: center; gap: var(--s-2); }
+.rh-det {
+  display: flex; align-items: center; gap: 10px; padding: 6px 10px; text-decoration: none;
+  font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-2); border: 1px solid transparent;
+}
+.rh-det:hover { border-color: var(--rule); }
+.rh-det b { font-size: .9375rem; color: var(--ink); font-weight: 600; }
+.ticks { display: inline-grid; grid-auto-flow: column; gap: 2px; align-items: end; height: 14px; }
+.ticks i { display: block; width: 3px; background: var(--rule-2); }
+.ticks i.is-met { background: var(--ink-2); }
+.ticks i.is-now { background: var(--accent); }
+
+main#main { flex: 1; width: 100%; max-width: var(--content-max); padding: var(--s-7) var(--gutter) var(--s-9); outline: none; }
+.colophon {
+  display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between;
+  padding: var(--s-5) var(--gutter); border-top: 1px solid var(--rule);
+  font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3);
+}
+
+/* 05 — COMPONENTS -------------------------------------------------------- */
+
+/* Buttons: square, typographic, honest */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 9px 16px; border: 1px solid var(--ink); border-radius: var(--radius);
+  font-size: .9375rem; font-weight: 600; line-height: 1.2; text-decoration: none; white-space: nowrap;
+  color: var(--ink); background: transparent;
+  transition: background-color var(--dur-1), color var(--dur-1), border-color var(--dur-1), transform var(--dur-1);
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn:active { transform: translateY(1px); }
+.btn--primary { background: var(--ink); color: var(--paper); }
+.btn--primary:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn--accent { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn--accent:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.btn--quiet { border-color: var(--rule-2); }
+.btn--quiet:hover { border-color: var(--ink); }
+.btn--text { border-color: transparent; padding-left: 0; padding-right: 0; min-height: 32px; text-decoration: underline; text-decoration-color: var(--rule-2); }
+.btn--text:hover { background: none; color: var(--accent-ink); text-decoration-color: currentColor; }
+.btn--sm { min-height: 32px; padding: 5px 12px; font-size: var(--fs-small); }
+.btn--lg { min-height: 52px; padding: 14px 24px; font-size: 1rem; }
+.btn--block { width: 100%; justify-content: space-between; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+.icon-btn {
+  display: inline-grid; place-items: center; width: 38px; height: 38px; flex: none;
+  border: 1px solid transparent; border-radius: var(--radius); color: var(--ink-2);
+  transition: border-color var(--dur-1), color var(--dur-1), background-color var(--dur-1);
+}
+.icon-btn:hover { border-color: var(--rule-2); color: var(--ink); }
+.icon-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.icon-btn[disabled] { opacity: .35; pointer-events: none; }
+
+/* Page header — asymmetric 8/4 composition with a heavy base rule */
+.page-head {
+  display: grid; grid-template-columns: minmax(0, 8fr) minmax(240px, 4fr); gap: var(--s-5) var(--s-7);
+  align-items: end; padding-bottom: var(--s-6); margin-bottom: var(--s-7); border-bottom: 2px solid var(--ink);
+}
+.page-head__eyebrow { margin-bottom: var(--s-4); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.page-head__title { max-width: 22ch; }
+.page-head__title.is-long { font-size: clamp(1.875rem, 1.3rem + 1.8vw, 2.875rem); max-width: 30ch; }
+.page-head__dek { margin-top: var(--s-4); }
+.page-head__aside { align-self: end; }
+
+/* Facts — definition lists for metadata, never stat cards */
+.facts { display: grid; gap: 0; }
+.facts > div { display: grid; grid-template-columns: minmax(110px, 40%) 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid var(--rule); align-items: baseline; }
+.facts > div:last-child { border-bottom: 1px solid var(--rule); }
+.facts dt { font-family: var(--f-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.facts dd { font-size: .9375rem; color: var(--ink); overflow-wrap: anywhere; }
+.facts--row { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-top: 1px solid var(--ink); }
+.facts--row > div { display: block; padding: 12px 16px 4px 0; border: 0; border-right: 1px solid var(--rule); }
+.facts--row > div + div { padding-left: 16px; }
+.facts--row > div:last-child { border: 0; border-bottom: 0; }
+.facts--row dd { margin-top: 6px; font-size: 1.0625rem; }
+
+/* Folio row — sidehead layout used for every major section */
+.folio { display: grid; grid-template-columns: minmax(180px, 3fr) minmax(0, 9fr); gap: var(--s-4) var(--s-7); padding-top: var(--s-5); border-top: 1px solid var(--ink); }
+.folio + .folio, .section-gap { margin-top: var(--s-8); }
+.folio__head { display: flex; flex-direction: column; gap: 10px; }
+.folio__num { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--accent-ink); letter-spacing: .06em; }
+.folio__title { font-family: var(--f-display); font-size: 1.5rem; line-height: 1.15; letter-spacing: -.01em; }
+.folio__note { font-size: var(--fs-small); color: var(--ink-3); max-width: 34ch; }
+.folio__body { min-width: 0; }
+
+.sec-label { display: flex; align-items: baseline; gap: 12px; font-family: var(--f-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); font-weight: 500; padding-bottom: 10px; border-bottom: 1px solid var(--ink); margin-bottom: var(--s-4); }
+.sec-label .n { color: var(--accent-ink); }
+.sec-label .aside { margin-left: auto; color: var(--ink-3); text-transform: none; letter-spacing: 0; }
+
+/* Agent marks — shape + colour, so identity never depends on colour alone */
+.mark { display: inline-block; flex: none; vertical-align: -1px; }
+.mark--opt, .c-opt { color: var(--opt); }
+.mark--skp, .c-skp { color: var(--skp); }
+.mark--ref, .c-ref { color: var(--ref); }
+.c-accent { color: var(--accent-ink); }
+.c-ok { color: var(--ok); } .c-err { color: var(--err); } .c-warn { color: var(--warn); }
+
+/* TRL token */
+.trl { font-family: var(--f-mono); font-size: .8125rem; letter-spacing: .02em; white-space: nowrap; color: var(--ink-2); }
+.trl b { font-size: 1.08em; color: var(--ink); font-weight: 600; margin-left: .25em; }
+
+/* Status glyphs: satisfied ● · inferred ◐ · missing ○ · not audited – · beyond ◌ */
+.st { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-small); color: var(--ink-2); white-space: nowrap; }
+.st::before { content: ""; width: 10px; height: 10px; flex: none; border-radius: 50%; border: 1.5px solid currentColor; }
+.st--satisfied { color: var(--ok); } .st--satisfied::before { background: currentColor; }
+.st--inferred { color: var(--ok); } .st--inferred::before { background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+.st--missing { color: var(--err); }
+.st--unaudited { color: var(--ink-3); } .st--unaudited::before { border-radius: 0; height: 1.5px; border: 0; background: currentColor; }
+.st--beyond { color: var(--ink-4); } .st--beyond::before { border-style: dotted; }
+.st--threat { color: var(--err); } .st--threat::before { border-radius: 0; transform: rotate(45deg) scale(.8); background: currentColor; }
+.st--clean { color: var(--ok); } .st--clean::before { border-radius: 0; background: currentColor; transform: scale(.8); }
+.st span { color: var(--ink-2); }
+
+/* Strength meter: three ascending bars */
+.meter { display: inline-grid; grid-auto-flow: column; gap: 2px; align-items: end; height: 12px; vertical-align: -1px; }
+.meter i { width: 4px; background: var(--rule-2); }
+.meter i:nth-child(1) { height: 5px; } .meter i:nth-child(2) { height: 8px; } .meter i:nth-child(3) { height: 12px; }
+.meter[data-v="1"] i:nth-child(-n+1), .meter[data-v="2"] i:nth-child(-n+2), .meter[data-v="3"] i:nth-child(-n+3) { background: var(--ink); }
+.meter[data-v="x"] i { background: var(--err); }
+
+/* Notices */
+.notice { display: grid; gap: 12px; padding: var(--s-5) 0 var(--s-5) var(--s-5); border-left: 3px solid var(--ink); background: linear-gradient(90deg, var(--paper-2), transparent 70%); }
+.notice--err { border-left-color: var(--err); background: linear-gradient(90deg, var(--err-wash), transparent 75%); }
+.notice--ok { border-left-color: var(--ok); background: linear-gradient(90deg, var(--ok-wash), transparent 75%); }
+.notice__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+/* Empty state */
+.empty { padding: var(--s-8) 0; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--s-7); border-top: 2px solid var(--ink); }
+.empty__figure { font-family: var(--f-display); font-size: clamp(6rem, 4rem + 8vw, 12rem); line-height: .8; color: var(--rule-2); font-weight: 300; letter-spacing: -.05em; }
+.empty .lead { margin: var(--s-4) 0 var(--s-5); }
+.empty-inline { padding: var(--s-5) 0; color: var(--ink-3); font-style: italic; font-family: var(--f-display); font-size: 1.0625rem; border-top: 1px dashed var(--rule-2); }
+
+/* Loading */
+.skel { display: block; height: .9em; margin: .5em 0; background: var(--paper-2); animation: skel 1.6s ease-in-out infinite; }
+.skel--w60 { width: 60%; } .skel--w80 { width: 80%; } .skel--w40 { width: 40%; } .skel--h { height: 2.4em; width: 70%; }
+@keyframes skel { 50% { opacity: .5; } }
+.progress { position: relative; height: 2px; background: var(--rule); overflow: hidden; }
+.progress::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 32%; background: var(--accent); animation: progress 1.5s var(--ease-io) infinite; }
+@keyframes progress { from { transform: translateX(-100%); } to { transform: translateX(320%); } }
+
+/* Form fields */
+.field { display: grid; gap: 8px; }
+.field + .field { margin-top: var(--s-5); }
+.field__label { display: flex; justify-content: space-between; gap: 12px; font-family: var(--f-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+.field__label .aside { text-transform: none; letter-spacing: 0; color: var(--ink-3); }
+.input {
+  width: 100%; padding: 10px 0; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0;
+  background: transparent; font-size: 1.0625rem; font-family: var(--f-display);
+}
+.input::placeholder, .sheet::placeholder { color: var(--ink-4); }
+.input:focus { outline: none; border-bottom-color: var(--accent); box-shadow: 0 1px 0 var(--accent); }
+.sheet {
+  --line: 1.75rem;
+  width: 100%; min-height: calc(var(--line) * 9 + 2px); resize: vertical; padding: 0 2px; border: 0;
+  border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); border-radius: 0;
+  font-family: var(--f-display); font-size: 1.0625rem; line-height: var(--line);
+  background-color: transparent;
+  background-image: linear-gradient(transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px));
+  background-size: 100% var(--line); background-attachment: local;
+}
+.sheet:focus { outline: none; border-color: var(--accent); }
+select.select {
+  appearance: none; padding: 8px 30px 8px 0; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23676356' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 4px center;
+  font-size: var(--fs-small);
+}
+
+/* Switch */
+.switch { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch__track { position: relative; width: 40px; height: 22px; margin-top: 2px; border: 1.5px solid var(--ink); border-radius: 11px; transition: background-color var(--dur-2); }
+.switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); transition: transform var(--dur-2) var(--ease-out), background-color var(--dur-2); }
+.switch input:checked + .switch__track { background: var(--err); border-color: var(--err); }
+.switch input:checked + .switch__track::after { transform: translateX(18px); background: var(--paper); }
+.switch input:focus-visible + .switch__track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch__text b { display: block; font-weight: 600; }
+.switch__text span { display: block; font-size: var(--fs-small); color: var(--ink-3); margin-top: 2px; max-width: 52ch; }
+
+/* Segmented control */
+.seg { display: inline-flex; border: 1px solid var(--ink); border-radius: var(--radius); }
+.seg button { padding: 6px 12px; font-size: var(--fs-small); font-weight: 500; min-height: 32px; }
+.seg button + button { border-left: 1px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:not([aria-pressed="true"]):hover { background: var(--paper-2); }
+
+/* Disclosure */
+.disclose { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); padding: 6px 0; }
+.disclose svg { transition: transform var(--dur-2) var(--ease-out); width: 14px; height: 14px; }
+.disclose[aria-expanded="true"] svg { transform: rotate(180deg); }
+.disclose:hover { color: var(--accent-ink); }
+.collapsible { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-3) var(--ease-out); }
+.collapsible > div { overflow: hidden; min-height: 0; }
+.collapsible.is-open { grid-template-rows: 1fr; }
+
+/* Ledger tables */
+.ledger { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+.ledger th { text-align: left; font-family: var(--f-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 0 12px 10px 0; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+.ledger td { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.ledger tr.is-current td { background: var(--paper-2); }
+.ledger td.num, .ledger th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Dialog */
+.dialog { width: min(780px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--ink); border-radius: var(--radius); background: var(--paper-3); color: var(--ink); box-shadow: var(--lift); }
+.dialog::backdrop { background: rgb(22 21 15 / .5); }
+.dialog[open] { animation: rise var(--dur-3) var(--ease-out); }
+.dialog__head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--ink); }
+.dialog__head .h3 { flex: 1; font-family: var(--f-display); font-weight: 400; font-size: 1.375rem; }
+.dialog__body { padding: 20px; overflow: auto; max-height: calc(100vh - 220px); }
+.dialog__foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--rule); }
+.codeblock { margin: 0; padding: 16px; background: var(--paper); border: 1px solid var(--rule); font-family: var(--f-mono); font-size: .8125rem; line-height: 1.55; white-space: pre; overflow: auto; max-height: 52vh; color: var(--ink-2); tab-size: 2; }
+
+/* Toasts */
+.toasts { position: fixed; right: 20px; bottom: 20px; z-index: 120; display: grid; gap: 8px; width: min(380px, calc(100vw - 40px)); }
+.toast { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; padding: 14px 14px 14px 16px; background: var(--ink); color: var(--paper); border-left: 4px solid var(--rule-2); box-shadow: var(--lift); animation: rise var(--dur-3) var(--ease-out); font-size: var(--fs-small); line-height: 1.45; }
+.toast b { display: block; font-size: .9375rem; margin-bottom: 2px; }
+.toast--ok { border-left-color: var(--ok); }
+.toast--err { border-left-color: var(--err); }
+.toast--info { border-left-color: var(--accent); }
+.toast .icon-btn { width: 28px; height: 28px; color: inherit; }
+.toast.is-leaving { opacity: 0; transform: translateY(6px); transition: all var(--dur-2); }
+
+/* Tooltip */
+.tip { position: fixed; z-index: 150; max-width: 300px; padding: 8px 10px; background: var(--ink); color: var(--paper); font-size: .8125rem; line-height: 1.45; pointer-events: none; box-shadow: var(--lift); opacity: 0; transform: translateY(2px); transition: opacity var(--dur-1), transform var(--dur-1); }
+.tip.is-on { opacity: 1; transform: none; }
+.term { border-bottom: 1px dotted var(--ink-3); cursor: help; }
+
+/* Agent speaking indicator (replay) */
+.speaking { display: inline-flex; gap: 2px; align-items: end; height: 12px; }
+.speaking i { width: 2px; height: 4px; background: currentColor; animation: speak .9s ease-in-out infinite; }
+.speaking i:nth-child(2) { animation-delay: .15s; } .speaking i:nth-child(3) { animation-delay: .3s; }
+@keyframes speak { 50% { height: 12px; } }
+</style>
+
+<style>
+/* 06 — VIEW-SPECIFIC STYLES ---------------------------------------------- */
+
+/* Intake (document upload) view */
+.drop { position: relative; padding: var(--s-7) var(--s-5); border: 1.5px dashed var(--rule-2); transition: border-color var(--dur-2), background-color var(--dur-2); cursor: pointer; }
+.drop.is-over { border-color: var(--accent); background: var(--accent-wash); }
+.drop input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.drop__hint { text-align: center; pointer-events: none; }
+.drop__hint .h2 { margin-bottom: var(--s-3); }
+.drop__icon { width: 48px; height: 48px; margin: 0 auto var(--s-4); color: var(--ink-3); }
+.drop__selected { margin-top: var(--s-4); padding: 12px 0; border-top: 1px solid var(--rule); font-family: var(--f-mono); font-size: var(--fs-small); display: flex; justify-content: space-between; align-items: center; }
+
+/* Sample bar */
+.samples { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s-3); margin-top: var(--s-5); }
+.sample-btn {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  padding: 12px 14px; border: 1px solid var(--rule); font-size: var(--fs-small); text-align: left;
+  transition: border-color var(--dur-1), background-color var(--dur-1);
+}
+.sample-btn:hover { border-color: var(--ink); background: var(--paper-2); }
+.sample-btn:active { transform: translateY(1px); }
+.sample-btn .trl { font-size: var(--fs-label); }
+.sample-btn__title { font-weight: 600; line-height: 1.3; }
+.sample-btn__expect { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); }
+
+/* Processing overlay */
+.proc-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgb(22 21 15 / .65); }
+html[data-theme="graphite"] .proc-overlay { background: rgb(0 0 0 / .7); }
+.proc { text-align: center; padding: var(--s-7); max-width: 500px; }
+.proc .h1 { margin-bottom: var(--s-3); }
+.proc .progress { width: 200px; margin: var(--s-5) auto 0; }
+
+/* Debate workspace */
+.debate-transcript { display: grid; gap: 0; }
+.debate-round { border-top: 1px solid var(--ink); }
+.debate-round__head {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  padding: 14px 0; cursor: pointer; user-select: none;
+}
+.debate-round__head:hover { color: var(--accent-ink); }
+.debate-round__head .num { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); }
+.debate-round__head .title { font-size: 1.0625rem; font-weight: 600; }
+.debate-round__head .chevron { width: 16px; height: 16px; transition: transform var(--dur-2) var(--ease-out); }
+.debate-round[open] .chevron { transform: rotate(180deg); }
+.debate-msgs { padding-bottom: var(--s-5); display: grid; gap: var(--s-5); }
+
+.debate-msg { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: var(--s-5); }
+.debate-msg__bar { border-radius: 2px; }
+.debate-msg--opt .debate-msg__bar { background: var(--opt); }
+.debate-msg--skp .debate-msg__bar { background: var(--skp); }
+.debate-msg--ref .debate-msg__bar { background: var(--ref); }
+.debate-msg__header { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 8px; }
+.debate-msg__agent { font-weight: 600; font-size: 1.0625rem; }
+.debate-msg__role { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); letter-spacing: .04em; text-transform: uppercase; }
+.debate-msg__body { font-family: var(--f-display); font-size: 1.0625rem; line-height: 1.6; max-width: var(--measure); color: var(--ink-2); font-variation-settings: "opsz" 16; }
+.debate-msg__body em { font-style: italic; color: var(--ink); }
+.debate-msg__meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 10px; font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); }
+
+/* Agent summary row */
+.agents-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.agent-cell { padding: 14px 16px 12px 0; }
+.agent-cell + .agent-cell { padding-left: 16px; border-left: 1px solid var(--rule); }
+.agent-cell__name { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9375rem; margin-bottom: 6px; }
+.agent-cell__trl { font-family: var(--f-mono); font-size: 1.125rem; font-weight: 600; margin-bottom: 4px; }
+.agent-cell__desc { font-size: var(--fs-small); color: var(--ink-3); line-height: 1.4; }
+
+/* TRL determination — maturity scale */
+.maturity { margin-top: var(--s-4); }
+.maturity__scale { display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; }
+.mat-cell { text-align: center; padding: 8px 2px 6px; font-family: var(--f-mono); font-size: var(--fs-label); font-weight: 500; transition: background-color var(--dur-2), color var(--dur-2); }
+.mat-cell--met { background: var(--ink); color: var(--paper); }
+.mat-cell--now { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.mat-cell--future { background: var(--paper-2); color: var(--ink-4); }
+.maturity__labels { display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; margin-top: 6px; }
+.maturity__labels span { font-size: .6875rem; line-height: 1.25; color: var(--ink-3); text-align: center; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mat-verdict { display: grid; grid-template-columns: auto 1fr; gap: var(--s-5); margin-top: var(--s-5); padding: var(--s-5) 0; border-top: 1px solid var(--ink); }
+.mat-verdict__level { font-family: var(--f-display); font-size: clamp(4rem, 2.5rem + 4vw, 6.5rem); font-weight: 300; line-height: .85; letter-spacing: -.04em; color: var(--accent); }
+.mat-verdict__body { min-width: 0; }
+
+/* Criteria checklist */
+.criteria-list { display: grid; gap: 0; }
+.crit-item { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--rule); align-items: start; font-size: .9375rem; line-height: 1.5; }
+.crit-item:last-child { border-bottom: 1px solid var(--ink); }
+.crit-item .code { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); white-space: nowrap; }
+
+/* Evidence explorer */
+.ev-search { display: flex; gap: 12px; margin-bottom: var(--s-5); }
+.ev-search .input { flex: 1; font-family: var(--f-sans); font-size: var(--fs-small); padding: 8px 0; }
+.ev-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) 110px 90px; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--rule); align-items: start; font-size: .9375rem; }
+.ev-row:first-of-type { border-top: 1px solid var(--ink); }
+.ev-row__id { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--accent-ink); font-weight: 500; }
+.ev-row__text { line-height: 1.5; color: var(--ink-2); }
+.ev-row__cat { font-family: var(--f-mono); font-size: var(--fs-label); text-transform: capitalize; color: var(--ink-3); }
+.ev-row__src { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); text-align: right; }
+.ev-filter-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--s-4); }
+.ev-pill { padding: 4px 10px; font-family: var(--f-mono); font-size: var(--fs-label); border: 1px solid var(--rule); cursor: pointer; transition: all var(--dur-1); }
+.ev-pill:hover, .ev-pill.is-on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+
+/* Analytics */
+.chart-well { padding: var(--s-5) 0; border-top: 1px solid var(--ink); }
+.chart-well__title { font-family: var(--f-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin-bottom: var(--s-4); }
+.bar-chart { display: grid; gap: 6px; }
+.bar-row { display: grid; grid-template-columns: 140px minmax(0, 1fr) 40px; gap: 12px; align-items: center; font-size: var(--fs-small); }
+.bar-row__label { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-2); text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-row__track { height: 16px; background: var(--paper-2); position: relative; }
+.bar-row__fill { height: 100%; background: var(--ink); transition: width var(--dur-3) var(--ease-out); }
+.bar-row__fill--accent { background: var(--accent); }
+.bar-row__val { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); text-align: right; }
+
+/* Feature heatmap */
+.feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 2px; }
+.feat-cell { padding: 8px 10px; font-family: var(--f-mono); font-size: .75rem; line-height: 1.3; }
+.feat-cell__name { color: var(--ink-3); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feat-cell__val { font-size: .875rem; font-weight: 600; }
+
+/* TRL Framework (ladder) view */
+.framework-item { border-top: 1px solid var(--ink); }
+.framework-item + .framework-item { margin-top: 0; }
+.fw-head { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 16px 0; cursor: pointer; }
+.fw-head:hover { color: var(--accent-ink); }
+.fw-head__num { font-family: var(--f-display); font-size: 1.75rem; font-weight: 400; text-align: center; color: var(--ink-3); }
+.framework-item.is-active .fw-head__num { color: var(--accent); }
+.fw-head__title { font-size: 1.0625rem; font-weight: 600; }
+.fw-head__env { font-size: var(--fs-small); color: var(--ink-3); margin-top: 2px; }
+.fw-head .chevron { width: 16px; height: 16px; color: var(--ink-3); transition: transform var(--dur-2) var(--ease-out); }
+.framework-item[open] .chevron { transform: rotate(180deg); }
+.fw-body { padding: 0 0 var(--s-5) 60px; display: grid; gap: var(--s-4); }
+.fw-body p { font-family: var(--f-display); font-size: 1.0625rem; line-height: 1.6; color: var(--ink-2); max-width: var(--measure); }
+
+/* History list */
+.history-list { display: grid; gap: 0; }
+.history-entry { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--rule); align-items: center; cursor: pointer; transition: background-color var(--dur-1); }
+.history-entry:first-child { border-top: 1px solid var(--ink); }
+.history-entry:hover { background: var(--paper-2); }
+.history-entry__trl { font-family: var(--f-display); font-size: 1.875rem; font-weight: 400; text-align: center; color: var(--accent); }
+.history-entry__title { font-weight: 600; font-size: .9375rem; margin-bottom: 2px; }
+.history-entry__sub { font-size: var(--fs-small); color: var(--ink-3); }
+.history-entry__time { font-family: var(--f-mono); font-size: var(--fs-label); color: var(--ink-3); white-space: nowrap; }
+
+/* 07 — MOTION ------------------------------------------------------------ */
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes fadeIn { from { opacity: 0; } }
+.anim-rise { animation: rise var(--dur-3) var(--ease-out) both; }
+.anim-fade { animation: fadeIn var(--dur-3) var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* 08 — RESPONSIVE -------------------------------------------------------- */
+@media (max-width: 1080px) {
+  :root { --rail-w: 240px; }
+}
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .index {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 70;
+    width: min(320px, 85vw); transform: translateX(-100%);
+    transition: transform var(--dur-3) var(--ease-out);
+    box-shadow: none; border-right-color: var(--ink);
+  }
+  .index.is-open { transform: none; box-shadow: 20px 0 60px -20px rgb(22 21 15 / .3); }
+  .brand__close { display: grid; }
+  .rh-menu { display: grid; }
+  .page-head { grid-template-columns: 1fr; }
+  .page-head__aside { align-self: start; }
+  .folio { grid-template-columns: 1fr; }
+  .empty { grid-template-columns: 1fr; }
+  .agents-row { grid-template-columns: 1fr; border: 0; }
+  .agent-cell + .agent-cell { border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; padding-top: 14px; }
+  .ev-row { grid-template-columns: 1fr; gap: 6px; }
+  .ev-row__src { text-align: left; }
+  .maturity__labels { display: none; }
+}
+@media (max-width: 600px) {
+  .samples { grid-template-columns: 1fr; }
+  .mat-verdict { grid-template-columns: 1fr; }
+  .mat-verdict__level { font-size: 3.5rem; }
+  .rh-doc { display: none; }
+  .rh-sep { display: none; }
+  .bar-row { grid-template-columns: 100px 1fr 36px; }
+  .facts--row { grid-auto-flow: row; grid-auto-columns: auto; }
+  .facts--row > div { border-right: 0; padding-left: 0; }
+  .facts--row > div + div { border-top: 1px solid var(--rule); }
+}
+
+/* 09 — PRINT ------------------------------------------------------------- */
+@media print {
+  body { background: white; color: black; font-size: 11pt; }
+  .index, .runninghead, .colophon, .toasts, .btn, .icon-btn, .seg, .switch, .rh-tools, .samples, .drop, .proc-overlay { display: none !important; }
+  .shell { display: block; }
+  main#main { padding: 0; max-width: none; }
+  .folio { break-inside: avoid; }
+  .page-head { border-bottom-width: 1pt; }
+  .mat-cell--met { background: #ccc !important; color: black !important; }
+  .mat-cell--now { background: black !important; color: white !important; }
+}
+</style>
+
+</head>
+<body>
+<!-- Skip link for keyboard users -->
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<!-- Application Shell -->
+<div class="shell">
+
+  <!-- INDEX RAIL (left navigation — a journal's table of contents) -->
+  <nav class="index" id="indexRail" aria-label="Primary navigation">
+    <div style="display:flex;justify-content:space-between;align-items:start">
+      <a href="#intake" class="brand__link" aria-label="TRL Debate Engine home">
+        <svg class="brand__mark" viewBox="0 0 38 24" aria-hidden="true" id="brandTicks">
+          <rect x="0" y="14" width="3" height="10" rx="0"/>
+          <rect x="5" y="10" width="3" height="14" rx="0"/>
+          <rect x="10" y="7" width="3" height="17" rx="0"/>
+          <rect x="15" y="4" width="3" height="20" rx="0"/>
+          <rect x="20" y="2" width="3" height="22" rx="0"/>
+          <rect x="25" y="4" width="3" height="20" rx="0"/>
+          <rect x="30" y="9" width="3" height="15" rx="0"/>
+          <rect x="35" y="14" width="3" height="10" rx="0"/>
+        </svg>
+        <span class="brand__name">TRL<br>Debate<br>Engine</span>
+      </a>
+      <button class="icon-btn brand__close" aria-label="Close navigation" onclick="closeIndex()">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p class="brand__tag">Adversarial multi-agent technology readiness adjudication</p>
+
+    <div class="idx-group"><span class="eyebrow">Workspace</span></div>
+    <ul class="idx-list" role="list">
+      <li><a href="#intake" class="idx-link" data-view="intake">
+        <span class="idx-num">00</span><span class="idx-name">New Assessment</span><span class="idx-meta"></span>
+      </a></li>
+      <li><a href="#dossier" class="idx-link is-empty" data-view="dossier">
+        <span class="idx-num">01</span><span class="idx-name">Document Dossier</span><span class="idx-meta" id="navDossierMeta">—</span>
+      </a></li>
+      <li><a href="#debate" class="idx-link is-empty" data-view="debate">
+        <span class="idx-num">02</span><span class="idx-name">Debate Transcript</span><span class="idx-meta" id="navDebateMeta">—</span>
+      </a></li>
+      <li><a href="#determination" class="idx-link is-empty" data-view="determination">
+        <span class="idx-num">03</span><span class="idx-name">TRL Determination</span><span class="idx-meta" id="navDetMeta">—</span>
+      </a></li>
+      <li><a href="#evidence" class="idx-link is-empty" data-view="evidence">
+        <span class="idx-num">04</span><span class="idx-name">Evidence Explorer</span><span class="idx-meta" id="navEvMeta">—</span>
+      </a></li>
+      <li><a href="#analytics" class="idx-link is-empty" data-view="analytics">
+        <span class="idx-num">05</span><span class="idx-name">Analytics</span><span class="idx-meta" id="navAnalyticsMeta">—</span>
+      </a></li>
+    </ul>
+
+    <div class="idx-group"><span class="eyebrow">Reference</span></div>
+    <ul class="idx-list" role="list">
+      <li><a href="#history" class="idx-link" data-view="history">
+        <span class="idx-num">06</span><span class="idx-name">Assessment History</span><span class="idx-meta" id="navHistoryMeta">0</span>
+      </a></li>
+      <li><a href="#framework" class="idx-link" data-view="framework">
+        <span class="idx-num">07</span><span class="idx-name">TRL 1–9 Framework</span><span class="idx-meta">9 levels</span>
+      </a></li>
+    </ul>
+
+    <div class="index__foot">
+      <details class="sys" id="sysDetails">
+        <summary><span class="sys__dot" id="sysDot"></span> System</summary>
+        <dl id="sysInfo">
+          <div><dt>Engine</dt><dd>Loading…</dd></div>
+        </dl>
+      </details>
+      <div style="display:flex;gap:6px;margin-top:14px">
+        <button class="icon-btn" aria-label="Toggle theme" onclick="toggleTheme()" id="themeBtn" title="Switch light / dark">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M18.36 5.64l1.41-1.41"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="scrim" id="scrim" onclick="closeIndex()"></div>
+
+  <!-- STAGE (right content area) -->
+  <div class="stage">
+
+    <!-- Running head — persistent page header like a journal folio line -->
+    <header class="runninghead">
+      <button class="icon-btn rh-menu" aria-label="Open navigation" onclick="openIndex()">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      </button>
+      <div class="rh-crumb">
+        <span class="rh-sec" id="rhSection">New Assessment</span>
+        <span class="rh-sep">—</span>
+        <span class="rh-doc" id="rhDoc">No document loaded</span>
+      </div>
+      <div class="rh-tools">
+        <a href="#determination" class="rh-det" id="rhTrl" style="display:none" title="Current TRL determination">
+          <span class="ticks" id="rhTicks"></span>
+          <b id="rhTrlNum"></b>
+        </a>
+        <button class="icon-btn" aria-label="Export JSON" onclick="openExportDialog()" id="exportBtn" disabled title="Export assessment JSON">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </button>
+        <button class="btn btn--accent btn--sm" onclick="navigate('intake')" id="newAssessBtn">
+          New Assessment
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT — views swap here -->
+    <main id="main" tabindex="-1">
+
+      <!-- VIEW 00: INTAKE -->
+      <section id="view-intake" class="view" role="region" aria-label="New Assessment">
+        <div class="page-head">
+          <div>
+            <div class="page-head__eyebrow"><span class="eyebrow"><b>00</b> New Assessment</span></div>
+            <h1 class="h1 page-head__title">Submit a technical document for readiness adjudication</h1>
+            <p class="lead page-head__dek">Upload a PDF, TXT, or Markdown file — or paste raw text. The multi-agent debate engine will extract evidence, run adversarial argumentation, and determine a Technology Readiness Level.</p>
+          </div>
+          <div class="page-head__aside">
+            <label class="switch">
+              <input type="checkbox" id="strictToggle">
+              <span class="switch__track"></span>
+              <span class="switch__text">
+                <b>Strict Security Mode</b>
+                <span>Reject documents containing prompt injection threats instead of neutralising them.</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="folio">
+          <div class="folio__head">
+            <span class="folio__num">UPLOAD</span>
+            <h2 class="folio__title">Document intake</h2>
+            <p class="folio__note">PDF, TXT, or Markdown. Max one file per assessment.</p>
+          </div>
+          <div class="folio__body">
+            <div class="drop" id="dropZone">
+              <input type="file" id="fileInput" accept=".pdf,.txt,.md" aria-label="Select file">
+              <div class="drop__hint">
+                <div class="drop__icon">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                    <path d="M24 32V16m-6 6l6-6 6 6"/><rect x="6" y="6" width="36" height="36"/>
+                  </svg>
+                </div>
+                <p class="h3">Drop file here or click to browse</p>
+                <p class="small" style="margin-top:6px">Supported: .pdf, .txt, .md</p>
+              </div>
+              <div class="drop__selected" id="selectedFile" hidden>
+                <span id="selectedFileName"></span>
+                <button class="btn btn--sm btn--quiet" onclick="clearFile(event)">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="folio section-gap">
+          <div class="folio__head">
+            <span class="folio__num">PASTE</span>
+            <h2 class="folio__title">Raw text input</h2>
+            <p class="folio__note">Paste a research abstract, lab report, or patent claims directly.</p>
+          </div>
+          <div class="folio__body">
+            <div class="field">
+              <label class="field__label" for="docTitle">Document title <span class="aside">Optional</span></label>
+              <input class="input" type="text" id="docTitle" placeholder="e.g. Quantum Cascade Laser Sensor Report">
+            </div>
+            <div class="field">
+              <label class="field__label" for="rawText">Document text</label>
+              <textarea class="sheet" id="rawText" placeholder="Paste technical documentation text here…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin-top:var(--s-6);padding-top:var(--s-5);border-top:2px solid var(--ink)">
+          <button class="btn btn--primary btn--lg" onclick="submitAssessment()" id="submitBtn">
+            Run Full Assessment
+            <svg class="ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <div class="folio section-gap">
+          <div class="folio__head">
+            <span class="folio__num">SAMPLES</span>
+            <h2 class="folio__title">Quick test documents</h2>
+            <p class="folio__note">Preloaded technical papers for instant demonstration.</p>
+          </div>
+          <div class="folio__body">
+            <div class="samples" id="samplesContainer"><!-- populated by JS --></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 01: DOSSIER -->
+      <section id="view-dossier" class="view" hidden role="region" aria-label="Document Dossier">
+        <div id="dossierContent">
+          <div class="empty-inline">No assessment data yet. Submit a document to begin.</div>
+        </div>
+      </section>
+
+      <!-- VIEW 02: DEBATE -->
+      <section id="view-debate" class="view" hidden role="region" aria-label="Debate Transcript">
+        <div id="debateContent">
+          <div class="empty-inline">No debate data. Run an assessment first.</div>
+        </div>
+      </section>
+
+      <!-- VIEW 03: DETERMINATION -->
+      <section id="view-determination" class="view" hidden role="region" aria-label="TRL Determination">
+        <div id="determinationContent">
+          <div class="empty-inline">No determination yet. Run an assessment first.</div>
+        </div>
+      </section>
+
+      <!-- VIEW 04: EVIDENCE -->
+      <section id="view-evidence" class="view" hidden role="region" aria-label="Evidence Explorer">
+        <div id="evidenceContent">
+          <div class="empty-inline">No evidence data. Run an assessment first.</div>
+        </div>
+      </section>
+
+      <!-- VIEW 05: ANALYTICS -->
+      <section id="view-analytics" class="view" hidden role="region" aria-label="Analytics">
+        <div id="analyticsContent">
+          <div class="empty-inline">No analytics data. Run an assessment first.</div>
+        </div>
+      </section>
+
+      <!-- VIEW 06: HISTORY -->
+      <section id="view-history" class="view" hidden role="region" aria-label="Assessment History">
+        <div id="historyContent"></div>
+      </section>
+
+      <!-- VIEW 07: FRAMEWORK -->
+      <section id="view-framework" class="view" hidden role="region" aria-label="TRL Framework">
+        <div id="frameworkContent"><div class="empty-inline">Loading framework…</div></div>
+      </section>
+
+    </main>
+
+    <footer class="colophon">
+      <span>TRL Debate Engine v0.1.0</span>
+      <span>APCTT Hackathon 2026</span>
+      <span>Multi-Agent Adversarial Adjudication</span>
+    </footer>
+  </div>
+</div>
+
+<!-- Processing overlay -->
+<div class="proc-overlay" id="procOverlay" hidden aria-live="assertive">
+  <div class="proc anim-rise">
+    <p class="eyebrow" style="margin-bottom:var(--s-3)">Processing</p>
+    <h2 class="h1">Running adversarial debate…</h2>
+    <p class="lead" style="margin-top:var(--s-3)">Extracting evidence, orchestrating agents, adjudicating TRL.</p>
+    <div class="progress" role="progressbar" aria-label="Assessment in progress"></div>
+  </div>
+</div>
+
+<!-- Export JSON dialog -->
+<dialog class="dialog" id="exportDialog">
+  <div class="dialog__head">
+    <h2 class="h3">Assessment Report — JSON Export</h2>
+    <button class="icon-btn" aria-label="Close" onclick="document.getElementById('exportDialog').close()">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="dialog__body">
+    <pre class="codeblock" id="jsonViewer"></pre>
+  </div>
+  <div class="dialog__foot">
+    <button class="btn btn--quiet btn--sm" onclick="copyJson()">Copy to clipboard</button>
+    <button class="btn btn--primary btn--sm" onclick="downloadJson()">Download .json</button>
+    <button class="btn btn--sm" onclick="document.getElementById('exportDialog').close()">Done</button>
+  </div>
+</dialog>
+
+<!-- Toast container -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<!-- Tooltip singleton -->
+<div class="tip" id="tooltip" role="tooltip"></div>
+
+
+<script>
+/* ==========================================================================
+   TRL DEBATE ENGINE — APPLICATION LOGIC
+   Single-page client: hash-router, real API integration, localStorage history.
+   All text is HTML-escaped before insertion.
+   ========================================================================== */
+'use strict';
+
+/* ── Globals ──────────────────────────────────────────────────────────────── */
+let DATA = null;           // current assessment response
+let LADDER = null;         // TRL 1–9 definitions from /api/trl-ladder
+let SAMPLES = null;        // sample documents from /api/sample-documents
+let FILE = null;           // selected File object for upload
+const HISTORY_KEY = 'trlde.history';
+const THEME_KEY = 'trlde.theme';
+
+/* ── Utilities ────────────────────────────────────────────────────────────── */
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function html(strings, ...vals) {
+  return strings.reduce((out, str, i) => out + str + (i < vals.length ? esc(vals[i]) : ''), '');
+}
+/** Inject raw HTML (already escaped by the caller). */
+function raw(s) { return s; }
+
+function $(id) { return document.getElementById(id); }
+function $$(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+
+function plural(n, w) { return `${n} ${w}${n === 1 ? '' : 's'}`; }
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+function ts() { return new Date().toISOString().replace('T',' ').slice(0,19); }
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+function toast(title, msg, type) {
+  const c = $('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' toast--' + type : '');
+  t.innerHTML = `<div>${title ? '<b>' + esc(title) + '</b>' : ''}${esc(msg)}</div>
+    <button class="icon-btn" aria-label="Dismiss" onclick="this.closest('.toast').remove()">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>`;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('is-leaving'); setTimeout(() => t.remove(), 300); }, 5000);
+}
+
+/* ── Theme ────────────────────────────────────────────────────────────────── */
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'paper' ? 'graphite' : 'paper';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem(THEME_KEY, next); } catch(e) {}
+}
+
+/* ── Index rail (mobile) ──────────────────────────────────────────────────── */
+function openIndex() { $('indexRail').classList.add('is-open'); $('scrim').classList.add('is-on'); document.body.classList.add('is-locked'); }
+function closeIndex() { $('indexRail').classList.remove('is-open'); $('scrim').classList.remove('is-on'); document.body.classList.remove('is-locked'); }
+
+/* ── Router ───────────────────────────────────────────────────────────────── */
+const VIEWS = ['intake','dossier','debate','determination','evidence','analytics','history','framework'];
+const VIEW_TITLES = { intake:'New Assessment', dossier:'Document Dossier', debate:'Debate Transcript', determination:'TRL Determination', evidence:'Evidence Explorer', analytics:'Analytics', history:'Assessment History', framework:'TRL 1–9 Framework' };
+
+function navigate(view) {
+  if (!VIEWS.includes(view)) view = 'intake';
+  location.hash = '#' + view;
+}
+
+function onRoute() {
+  const hash = location.hash.replace('#','') || 'intake';
+  const view = VIEWS.includes(hash) ? hash : 'intake';
+  VIEWS.forEach(v => {
+    const el = $('view-' + v);
+    if (v === view) { el.hidden = false; el.classList.add('anim-fade'); setTimeout(() => el.classList.remove('anim-fade'), 450); }
+    else el.hidden = true;
+  });
+  // Update nav
+  $$('.idx-link').forEach(a => {
+    a.setAttribute('aria-current', a.dataset.view === view ? 'page' : '');
+  });
+  // Running head
+  $('rhSection').textContent = VIEW_TITLES[view] || '';
+  closeIndex();
+  window.scrollTo(0, 0);
+  // Lazy render
+  if (view === 'history') renderHistory();
+  if (view === 'framework' && LADDER) renderFramework();
+}
+
+window.addEventListener('hashchange', onRoute);
+
+/* ── System health ────────────────────────────────────────────────────────── */
+async function checkHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    const dot = $('sysDot');
+    dot.classList.toggle('is-ok', d.status === 'HEALTHY');
+    dot.classList.toggle('is-down', d.status !== 'HEALTHY');
+    const dl = $('sysInfo');
+    dl.innerHTML = Object.entries(d.layers || {}).map(([k,v]) =>
+      `<div><dt>${esc(k.replace(/^layer_\d+_/,'').replace(/_/g,' '))}</dt><dd>${esc(v)}</dd></div>`
+    ).join('') + `<div><dt>Version</dt><dd>${esc(d.version || '—')}</dd></div>`;
+  } catch(e) {
+    $('sysDot').classList.add('is-down');
+    $('sysInfo').innerHTML = '<div><dt>Status</dt><dd>Unreachable</dd></div>';
+  }
+}
+
+/* ── Load samples ─────────────────────────────────────────────────────────── */
+async function loadSamples() {
+  try {
+    const r = await fetch('/api/sample-documents');
+    const d = await r.json();
+    SAMPLES = d.samples || [];
+    const c = $('samplesContainer');
+    c.innerHTML = SAMPLES.map(s => `<button class="sample-btn" onclick="runSample('${esc(s.id)}')">
+      <span class="trl">TRL <b>${s.expected_trl}</b></span>
+      <span class="sample-btn__title">${esc(s.title)}</span>
+      <svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px;color:var(--ink-3)"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>`).join('');
+  } catch(e) { console.warn('Failed to load samples', e); }
+}
+
+/* ── Load TRL ladder ──────────────────────────────────────────────────────── */
+async function loadLadder() {
+  try {
+    const r = await fetch('/api/trl-ladder');
+    const d = await r.json();
+    LADDER = d.ladder || [];
+  } catch(e) { console.warn('Failed to load TRL ladder', e); }
+}
+
+/* ── File handling ────────────────────────────────────────────────────────── */
+function setupDrop() {
+  const zone = $('dropZone');
+  const input = $('fileInput');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('is-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('is-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('is-over');
+    if (e.dataTransfer.files.length) { FILE = e.dataTransfer.files[0]; showFile(); }
+  });
+  input.addEventListener('change', e => { if (e.target.files.length) { FILE = e.target.files[0]; showFile(); } });
+}
+function showFile() {
+  if (!FILE) return;
+  $('selectedFile').hidden = false;
+  $('selectedFileName').textContent = `${FILE.name} — ${Math.round(FILE.size / 1024)} KB`;
+}
+function clearFile(e) {
+  e && e.stopPropagation(); FILE = null;
+  $('selectedFile').hidden = true; $('fileInput').value = '';
+}
+
+/* ── Submit assessment ────────────────────────────────────────────────────── */
+async function submitAssessment() {
+  const raw = $('rawText').value.trim();
+  const strict = $('strictToggle').checked;
+  if (!FILE && !raw) { toast('Missing input', 'Upload a file or paste text.', 'err'); return; }
+  showProcessing(true);
+  try {
+    let res;
+    if (FILE) {
+      const fd = new FormData();
+      fd.append('file', FILE);
+      fd.append('strict_security', strict);
+      res = await fetch('/api/assess', { method: 'POST', body: fd });
+    } else {
+      const title = $('docTitle').value.trim() || 'Pasted Technical Document';
+      res = await fetch('/api/assess-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: raw, title, strict_security: strict })
+      });
+    }
+    const data = await res.json();
+    if (data.success === false) {
+      showProcessing(false);
+      if (data.security_status && data.security_status.strict_mode_blocked) {
+        toast('Security Rejection', data.error || 'Document rejected under strict security mode.', 'err');
+      } else {
+        toast('Assessment Failed', data.error || 'Unknown error.', 'err');
+      }
+      return;
+    }
+    DATA = data;
+    saveToHistory(data);
+    renderAll(data);
+    showProcessing(false);
+    navigate('determination');
+    toast('Assessment Complete', `TRL ${data.assessment.predicted_trl} — ${data.assessment.confidence_percent}% confidence`, 'ok');
+  } catch(e) {
+    showProcessing(false);
+    toast('Network Error', e.message, 'err');
+  }
+  // Reset form
+  clearFile(); $('rawText').value = ''; $('docTitle').value = '';
+}
+
+async function runSample(id) {
+  const strict = $('strictToggle').checked;
+  showProcessing(true);
+  try {
+    const res = await fetch(`/api/sample-assess/${encodeURIComponent(id)}?strict_security=${strict}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success === false) {
+      showProcessing(false);
+      toast('Assessment Failed', data.error || 'Unknown error.', 'err');
+      return;
+    }
+    DATA = data;
+    saveToHistory(data);
+    renderAll(data);
+    showProcessing(false);
+    navigate('determination');
+    toast('Assessment Complete', `TRL ${data.assessment.predicted_trl} — ${data.assessment.confidence_percent}% confidence`, 'ok');
+  } catch(e) {
+    showProcessing(false);
+    toast('Network Error', e.message, 'err');
+  }
+}
+
+function showProcessing(on) {
+  $('procOverlay').hidden = !on;
+  if (on) document.body.classList.add('is-locked');
+  else document.body.classList.remove('is-locked');
+}
+
+/* ── History (localStorage) ───────────────────────────────────────────────── */
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveToHistory(data) {
+  const h = getHistory();
+  h.unshift({
+    id: Date.now(),
+    time: ts(),
+    title: data.document_info.name,
+    trl: data.assessment.predicted_trl,
+    confidence: data.assessment.confidence_percent,
+    data
+  });
+  if (h.length > 30) h.length = 30;
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch(e) {}
+  updateNavMeta();
+}
+function loadFromHistory(id) {
+  const h = getHistory();
+  const entry = h.find(e => e.id === id);
+  if (!entry) return;
+  DATA = entry.data;
+  renderAll(DATA);
+  navigate('determination');
+}
+function clearHistory() {
+  try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
+  updateNavMeta();
+  renderHistory();
+  toast('History Cleared', 'All saved assessments removed.', 'info');
+}
+
+/* ── Render ALL views from DATA ───────────────────────────────────────────── */
+function renderAll(d) {
+  renderDossier(d);
+  renderDebate(d);
+  renderDetermination(d);
+  renderEvidence(d);
+  renderAnalytics(d);
+  updateShell(d);
+  updateNavMeta();
+}
+
+function updateShell(d) {
+  // Running head doc name
+  $('rhDoc').textContent = d.document_info.name;
+  // TRL indicator in running head
+  const rhTrl = $('rhTrl');
+  rhTrl.style.display = '';
+  $('rhTrlNum').textContent = 'TRL ' + d.assessment.predicted_trl;
+  // Build small tick strip
+  let ticks = '';
+  for (let i = 1; i <= 9; i++) {
+    const cls = i < d.assessment.predicted_trl ? 'is-met' : i === d.assessment.predicted_trl ? 'is-now' : '';
+    ticks += `<i style="height:${4 + i}px" class="${cls}"></i>`;
+  }
+  $('rhTicks').innerHTML = ticks;
+  // Brand ticks
+  const rects = $$('rect', $('brandTicks'));
+  rects.forEach((r, i) => {
+    r.classList.remove('is-met','is-now');
+    if (i < d.assessment.predicted_trl - 1) r.classList.add('is-met');
+    else if (i === d.assessment.predicted_trl - 1) r.classList.add('is-now');
+  });
+  // Export button
+  $('exportBtn').disabled = false;
+  // Enable nav links
+  $$('.idx-link.is-empty').forEach(a => a.classList.remove('is-empty'));
+}
+
+function updateNavMeta() {
+  if (DATA) {
+    $('navDossierMeta').textContent = DATA.document_info.format.toUpperCase();
+    $('navDebateMeta').textContent = plural(DATA.debate.rounds.length, 'round');
+    $('navDetMeta').textContent = 'TRL ' + DATA.assessment.predicted_trl;
+    $('navEvMeta').textContent = plural(DATA.evidence_ledger.length, 'item');
+    $('navAnalyticsMeta').textContent = pct(DATA.assessment.confidence);
+  }
+  $('navHistoryMeta').textContent = String(getHistory().length);
+}
+
+/* ── VIEW 01: DOSSIER ─────────────────────────────────────────────────────── */
+function renderDossier(d) {
+  const di = d.document_info;
+  const sec = d.security_status;
+  const chunks = d.chunks || [];
+
+  let threatHtml = '';
+  if (!sec.is_safe) {
+    threatHtml = `<div class="notice notice--err" style="margin-top:var(--s-5)">
+      <div><span class="eyebrow" style="color:var(--err)"><b>Security Alert</b></span></div>
+      <p style="font-size:var(--fs-small)">Prompt injection threats detected and neutralised: <strong>${esc(sec.threats_detected.join(', '))}</strong></p>
+    </div>`;
+  }
+
+  let chunkRows = chunks.map((ch, i) => {
+    const hasThreat = ch.threats && ch.threats.length > 0;
+    const stClass = hasThreat ? 'st--threat' : (ch.is_sanitized ? 'st--clean' : 'st--unaudited');
+    const stLabel = hasThreat ? ch.threats.join(', ') : (ch.is_sanitized ? 'Clean' : 'Unverified');
+    return `<div style="padding:14px 0;border-bottom:1px solid var(--rule)">
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px">
+        <span class="mono" style="font-size:var(--fs-label);color:var(--accent-ink)">${esc(ch.id)}</span>
+        <span class="mono" style="font-size:var(--fs-label);color:var(--ink-3)">P.${ch.page} · ${esc(ch.section || 'General')}</span>
+      </div>
+      <p style="font-size:var(--fs-small);line-height:1.55;color:var(--ink-2);font-family:var(--f-display)">${esc(ch.preview)}</p>
+      <div style="margin-top:8px"><span class="st ${stClass}"><span>${esc(stLabel)}</span></span></div>
+    </div>`;
+  }).join('');
+
+  $('dossierContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>01</b> Document Dossier</span></div>
+        <h1 class="h1 page-head__title is-long">${esc(di.name)}</h1>
+        <p class="lead page-head__dek">Ingested, sanitised, and structurally parsed by the document processing layer.</p>
+      </div>
+      <div class="page-head__aside">
+        <div class="facts">
+          <div><dt>Format</dt><dd>${esc(di.format.toUpperCase())}</dd></div>
+          <div><dt>Pages</dt><dd>${di.page_count}</dd></div>
+          <div><dt>Characters</dt><dd>${Number(di.total_chars).toLocaleString()}</dd></div>
+          <div><dt>Chunks</dt><dd>${di.chunks_count}</dd></div>
+          <div><dt>Security</dt><dd><span class="st ${sec.is_safe ? 'st--clean' : 'st--threat'}"><span>${sec.is_safe ? 'Clean — no threats' : esc(sec.threats_detected.join(', '))}</span></span></dd></div>
+        </div>
+      </div>
+    </div>
+    ${threatHtml}
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">CHUNKS</span>
+        <h2 class="folio__title">Structural segments</h2>
+        <p class="folio__note">Paragraphs extracted and passed through the sanitisation filter. Up to 10 shown.</p>
+      </div>
+      <div class="folio__body">
+        ${chunks.length ? chunkRows : '<p class="empty-inline">No chunks extracted.</p>'}
+      </div>
+    </div>`;
+}
+
+/* ── VIEW 02: DEBATE ──────────────────────────────────────────────────────── */
+function renderDebate(d) {
+  const rounds = d.debate.rounds;
+  const stances = d.debate.agent_stances;
+
+  function agentMark(agent) {
+    if (agent === 'optimist') return `<svg class="mark mark--opt" width="12" height="12" viewBox="0 0 12 12"><polygon points="6,1 11,11 1,11" fill="currentColor"/></svg>`;
+    if (agent === 'skeptic') return `<svg class="mark mark--skp" width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" fill="currentColor"/></svg>`;
+    return `<svg class="mark mark--ref" width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="currentColor"/></svg>`;
+  }
+
+  let roundsHtml = rounds.map((r, ri) => {
+    let msgsHtml = r.messages.map(m => {
+      const colorClass = 'debate-msg--' + (m.agent === 'optimist' ? 'opt' : m.agent === 'skeptic' ? 'skp' : 'ref');
+      const trlInfo = m.target_trl != null ? `Target: TRL ${m.target_trl}` : `Adjudicated: TRL ${m.final_trl}`;
+      return `<div class="debate-msg ${colorClass}">
+        <div class="debate-msg__bar"></div>
+        <div>
+          <div class="debate-msg__header">
+            ${agentMark(m.agent)}
+            <span class="debate-msg__agent">${esc(m.author)}</span>
+            <span class="debate-msg__role">${esc(m.role)}</span>
+          </div>
+          <div class="debate-msg__body">${esc(m.text)}</div>
+          <div class="debate-msg__meta">
+            <span>${esc(trlInfo)}</span>
+            ${m.confidence != null ? `<span>Confidence: ${m.confidence}%</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<details class="debate-round" ${ri < 3 ? 'open' : ''}>
+      <summary class="debate-round__head">
+        <span class="num">R${r.round_number}</span>
+        <span class="title">${esc(r.title)}</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <div class="debate-msgs">${msgsHtml}</div>
+    </details>`;
+  }).join('');
+
+  $('debateContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>02</b> Debate Transcript</span></div>
+        <h1 class="h1 page-head__title">Adversarial multi-agent debate</h1>
+        <p class="lead page-head__dek">Three agents — the Optimist, the Skeptic, and the Referee — argue over the technology's readiness level. The Referee adjudicates.</p>
+      </div>
+      <div class="page-head__aside">
+        <div class="facts">
+          <div><dt>Protocol</dt><dd>Bounded ${rounds.length - 1}-round debate + adjudication</dd></div>
+          <div><dt>Agents</dt><dd>Optimist, Skeptic, Referee</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio">
+      <div class="folio__head">
+        <span class="folio__num">AGENTS</span>
+        <h2 class="folio__title">Participant stances</h2>
+      </div>
+      <div class="folio__body">
+        <div class="agents-row">
+          <div class="agent-cell">
+            <div class="agent-cell__name">${agentMark('optimist')} ${esc(stances.optimist.name)}</div>
+            <div class="agent-cell__trl c-opt">TRL ${stances.optimist.target_trl}</div>
+            <div class="agent-cell__desc">${esc(stances.optimist.role)}</div>
+          </div>
+          <div class="agent-cell">
+            <div class="agent-cell__name">${agentMark('skeptic')} ${esc(stances.skeptic.name)}</div>
+            <div class="agent-cell__trl c-skp">TRL ${stances.skeptic.target_trl}</div>
+            <div class="agent-cell__desc">${esc(stances.skeptic.role)}</div>
+          </div>
+          <div class="agent-cell">
+            <div class="agent-cell__name">${agentMark('referee')} ${esc(stances.referee.name)}</div>
+            <div class="agent-cell__trl c-ref">TRL ${stances.referee.final_trl}</div>
+            <div class="agent-cell__desc">${esc(stances.referee.role)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">TRANSCRIPT</span>
+        <h2 class="folio__title">Debate proceedings</h2>
+        <p class="folio__note">Each round is expandable. Read the exchange between agents as they argue their positions.</p>
+      </div>
+      <div class="folio__body">
+        <div class="debate-transcript">${roundsHtml}</div>
+      </div>
+    </div>`;
+}
+
+/* ── VIEW 03: DETERMINATION ───────────────────────────────────────────────── */
+function renderDetermination(d) {
+  const a = d.assessment;
+  const trl = a.predicted_trl;
+
+  // Maturity scale cells
+  let cells = '', labels = '';
+  for (let i = 1; i <= 9; i++) {
+    const cls = i < trl ? 'mat-cell--met' : i === trl ? 'mat-cell--now' : 'mat-cell--future';
+    cells += `<div class="mat-cell ${cls}">${i}</div>`;
+    const def = LADDER ? LADDER.find(l => l.level === i) : null;
+    labels += `<span>${def ? esc(def.title) : ''}</span>`;
+  }
+
+  // Criteria
+  let satisfiedHtml = a.satisfied_criteria.map(c =>
+    `<div class="crit-item"><span class="st st--satisfied"></span><span>${esc(c)}</span><span class="trl">TRL <b>${trl}</b></span></div>`
+  ).join('');
+  let missingHtml = a.missing_criteria.map(c =>
+    `<div class="crit-item"><span class="st st--missing"></span><span>${esc(c)}</span><span class="trl">TRL <b>${trl + 1}</b></span></div>`
+  ).join('');
+
+  // Implied prerequisites
+  let impliedHtml = '';
+  if (a.implied_prerequisites_audit && a.implied_prerequisites_audit.length > 0) {
+    impliedHtml = a.implied_prerequisites_audit.map(p =>
+      `<div class="crit-item">
+        <span class="st st--inferred"></span>
+        <span><span class="mono" style="font-size:var(--fs-label);color:var(--ink-3)">${esc(p.criterion_id)}</span> (TRL ${p.target_level}) — ${esc(p.rationale)}</span>
+        <span class="trl" style="color:var(--ink-3)">inferred from TRL <b>${p.inferred_from_trl}</b></span>
+      </div>`
+    ).join('');
+  } else {
+    impliedHtml = '<p class="empty-inline">No implied prerequisite inferences at this level.</p>';
+  }
+
+  // Recommendations
+  let recsHtml = a.recommendations.map((r, i) =>
+    `<div style="display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:10px 0;border-bottom:1px solid var(--rule)">
+      <span class="mono" style="font-size:var(--fs-label);text-align:center;color:var(--accent-ink);padding-top:2px">${String(i + 1).padStart(2, '0')}</span>
+      <span style="font-size:.9375rem;line-height:1.5">${esc(r)}</span>
+    </div>`
+  ).join('');
+
+  $('determinationContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>03</b> TRL Determination</span></div>
+        <h1 class="h1 page-head__title">Official readiness adjudication</h1>
+        <p class="lead page-head__dek">Final determination by the Referee after adversarial debate, criteria verification, and implied prerequisite audit.</p>
+      </div>
+      <div class="page-head__aside">
+        <div class="facts">
+          <div><dt>Method</dt><dd>Rule-based + ML gate</dd></div>
+          <div><dt>Confidence</dt><dd class="mono tnum" style="font-size:1.0625rem;font-weight:600">${a.confidence_percent}%</dd></div>
+          <div><dt>Environment</dt><dd>${esc(a.required_environment)}</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio">
+      <div class="folio__head">
+        <span class="folio__num">VERDICT</span>
+        <h2 class="folio__title">Technology Readiness Level</h2>
+      </div>
+      <div class="folio__body">
+        <div class="maturity">
+          <div class="maturity__scale">${cells}</div>
+          <div class="maturity__labels">${labels}</div>
+        </div>
+        <div class="mat-verdict">
+          <div class="mat-verdict__level">${trl}</div>
+          <div class="mat-verdict__body">
+            <h3 class="h2">${esc(a.trl_title)}</h3>
+            <p class="read" style="margin-top:var(--s-3)">${esc(a.trl_summary)}</p>
+            <div class="notice" style="margin-top:var(--s-5)">
+              <p style="font-size:var(--fs-small);line-height:1.55"><strong style="color:var(--ref)">Referee Adjudication:</strong> ${esc(a.justification)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">SATISFIED</span>
+        <h2 class="folio__title">Verified criteria</h2>
+        <p class="folio__note">Requirements for TRL ${trl} confirmed by evidence.</p>
+      </div>
+      <div class="folio__body">
+        <div class="criteria-list">${satisfiedHtml || '<p class="empty-inline">None.</p>'}</div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">MISSING</span>
+        <h2 class="folio__title">Next-level gaps</h2>
+        <p class="folio__note">Requirements for TRL ${Math.min(trl + 1, 9)} not yet satisfied.</p>
+      </div>
+      <div class="folio__body">
+        <div class="criteria-list">${missingHtml || '<p class="empty-inline">All criteria satisfied through TRL 9.</p>'}</div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">IMPLIED</span>
+        <h2 class="folio__title">Prerequisite audit</h2>
+        <p class="folio__note">Lower-level criteria inferred from verified higher-level evidence.</p>
+      </div>
+      <div class="folio__body">${impliedHtml}</div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">ROADMAP</span>
+        <h2 class="folio__title">Advancement steps</h2>
+        <p class="folio__note">Actions to progress toward the next TRL.</p>
+      </div>
+      <div class="folio__body">${recsHtml || '<p class="empty-inline">No recommendations.</p>'}</div>
+    </div>`;
+}
+
+/* ── VIEW 04: EVIDENCE ────────────────────────────────────────────────────── */
+function renderEvidence(d) {
+  const ledger = d.evidence_ledger || [];
+  // Unique categories for filter pills
+  const cats = [...new Set(ledger.map(e => e.category))];
+
+  function strengthLevel(s) {
+    if (s === 'strong_supporting') return 3;
+    if (s === 'moderate_supporting') return 2;
+    if (s === 'weak_supporting') return 1;
+    return 'x';
+  }
+
+  let rows = ledger.map(e =>
+    `<div class="ev-row" data-cat="${esc(e.category)}" data-text="${esc(e.text.toLowerCase())}">
+      <div class="ev-row__id">${esc(e.id)}</div>
+      <div>
+        <div class="ev-row__text">${esc(e.text)}</div>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:var(--fs-label);font-family:var(--f-mono);color:var(--ink-3)">
+          <span class="ev-row__cat">${esc(e.category.replace(/_/g, ' '))}</span>
+          <span><span class="meter" data-v="${strengthLevel(e.strength)}"><i></i><i></i><i></i></span> ${esc(e.strength.replace(/_/g, ' '))}</span>
+          ${e.target_trl != null ? `<span class="trl">TRL <b>${e.target_trl}</b></span>` : ''}
+        </div>
+      </div>
+      <div class="ev-row__cat" style="display:none">${esc(e.category)}</div>
+      <div class="ev-row__src">P.${e.page} · ${esc(e.section)}</div>
+    </div>`
+  ).join('');
+
+  let pills = cats.map(c =>
+    `<button class="ev-pill" data-filter="${esc(c)}" onclick="filterEvidence(this)">${esc(c.replace(/_/g, ' '))}</button>`
+  ).join('') + `<button class="ev-pill is-on" data-filter="all" onclick="filterEvidence(this)">All</button>`;
+
+  $('evidenceContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>04</b> Evidence Explorer</span></div>
+        <h1 class="h1 page-head__title">Technical evidence ledger</h1>
+        <p class="lead page-head__dek">Empirical claims extracted from document chunks, classified by category and evidence strength.</p>
+      </div>
+      <div class="page-head__aside">
+        <div class="facts">
+          <div><dt>Total items</dt><dd>${ledger.length}</dd></div>
+          <div><dt>Categories</dt><dd>${cats.length}</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ev-search">
+      <input class="input" type="search" placeholder="Search evidence text…" oninput="searchEvidence(this.value)" aria-label="Search evidence">
+    </div>
+    <div class="ev-filter-bar">${pills}</div>
+    <div id="evRows">${rows || '<p class="empty-inline">No evidence extracted.</p>'}</div>`;
+}
+
+function filterEvidence(btn) {
+  const filter = btn.dataset.filter;
+  $$('.ev-pill').forEach(p => p.classList.toggle('is-on', p === btn || (filter === 'all' && p.dataset.filter === 'all')));
+  $$('.ev-row', $('evRows')).forEach(r => {
+    r.style.display = (filter === 'all' || r.dataset.cat === filter) ? '' : 'none';
+  });
+}
+function searchEvidence(q) {
+  q = q.toLowerCase();
+  $$('.ev-row', $('evRows')).forEach(r => {
+    r.style.display = r.dataset.text.includes(q) ? '' : 'none';
+  });
+}
+
+/* ── VIEW 05: ANALYTICS ───────────────────────────────────────────────────── */
+function renderAnalytics(d) {
+  const an = d.analytics;
+  const a = d.assessment;
+
+  // Evidence distribution bar chart
+  const evDist = an.evidence_distribution || {};
+  const maxEv = Math.max(1, ...Object.values(evDist));
+  let evBars = Object.entries(evDist).map(([k,v]) =>
+    `<div class="bar-row">
+      <span class="bar-row__label">${esc(k.replace(/_/g, ' '))}</span>
+      <div class="bar-row__track"><div class="bar-row__fill" style="width:${(v/maxEv)*100}%"></div></div>
+      <span class="bar-row__val">${v}</span>
+    </div>`
+  ).join('');
+
+  // TRL ladder position
+  let ladderBars = '';
+  for (let i = 1; i <= 9; i++) {
+    const isActive = i === a.predicted_trl;
+    const isPast = i < a.predicted_trl;
+    const w = isActive ? 100 : isPast ? 60 : 12;
+    const cls = isActive ? 'bar-row__fill--accent' : 'bar-row__fill';
+    ladderBars += `<div class="bar-row">
+      <span class="bar-row__label">TRL ${i}</span>
+      <div class="bar-row__track"><div class="${cls}" style="width:${w}%"></div></div>
+      <span class="bar-row__val">${isActive ? '●' : isPast ? '✓' : ''}</span>
+    </div>`;
+  }
+
+  // Feature vector heatmap
+  const feats = an.features || [];
+  let featCells = feats.map(f => {
+    const opacity = Math.min(1, f.value / 10) * 0.6 + 0.05;
+    return `<div class="feat-cell" style="background:rgba(207,69,32,${opacity.toFixed(2)})">
+      <div class="feat-cell__name">${esc(f.name.replace(/_/g, ' '))}</div>
+      <div class="feat-cell__val">${f.value}</div>
+    </div>`;
+  }).join('');
+
+  // Criteria progress
+  const cp = an.criteria_progress || {};
+
+  $('analyticsContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>05</b> Analytics</span></div>
+        <h1 class="h1 page-head__title">Assessment analytics</h1>
+        <p class="lead page-head__dek">Quantitative breakdown of evidence, features, and criteria verification for the current assessment.</p>
+      </div>
+      <div class="page-head__aside">
+        <div class="facts">
+          <div><dt>Predicted TRL</dt><dd class="mono" style="font-size:1.125rem;font-weight:600">${a.predicted_trl}</dd></div>
+          <div><dt>Confidence</dt><dd class="mono tnum">${a.confidence_percent}%</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio">
+      <div class="folio__head">
+        <span class="folio__num">CRITERIA</span>
+        <h2 class="folio__title">Verification progress</h2>
+      </div>
+      <div class="folio__body">
+        <div class="facts--row" style="border-top:1px solid var(--ink)">
+          <div><dt>Satisfied</dt><dd style="color:var(--ok);font-weight:600">${cp.satisfied_count || 0}</dd></div>
+          <div><dt>Missing</dt><dd style="color:var(--err);font-weight:600">${cp.missing_count || 0}</dd></div>
+          <div><dt>Implied</dt><dd style="color:var(--ink-2);font-weight:600">${cp.implied_count || 0}</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">EVIDENCE</span>
+        <h2 class="folio__title">Category distribution</h2>
+      </div>
+      <div class="folio__body">
+        <div class="chart-well" style="border:0">
+          <div class="bar-chart">${evBars || '<p class="empty-inline">No evidence.</p>'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">LADDER</span>
+        <h2 class="folio__title">TRL position</h2>
+      </div>
+      <div class="folio__body">
+        <div class="chart-well" style="border:0">
+          <div class="bar-chart">${ladderBars}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">FEATURES</span>
+        <h2 class="folio__title">Feature vector</h2>
+        <p class="folio__note">25-dimension feature vector extracted by the ML inference layer.</p>
+      </div>
+      <div class="folio__body">
+        <div class="feat-grid">${featCells || '<p class="empty-inline">No features.</p>'}</div>
+      </div>
+    </div>`;
+}
+
+/* ── VIEW 06: HISTORY ─────────────────────────────────────────────────────── */
+function renderHistory() {
+  const h = getHistory();
+  if (!h.length) {
+    $('historyContent').innerHTML = `
+      <div class="page-head" style="border-bottom-width:1px">
+        <div>
+          <div class="page-head__eyebrow"><span class="eyebrow"><b>06</b> Assessment History</span></div>
+          <h1 class="h1 page-head__title">No assessments yet</h1>
+          <p class="lead page-head__dek" style="margin-top:var(--s-3)">Run an assessment and it will appear here. History is stored locally in your browser.</p>
+        </div>
+      </div>`;
+    return;
+  }
+  let listHtml = h.map(e =>
+    `<div class="history-entry" onclick="loadFromHistory(${e.id})" tabindex="0" role="button" aria-label="Load ${esc(e.title)}">
+      <div class="history-entry__trl">${e.trl}</div>
+      <div>
+        <div class="history-entry__title">${esc(e.title)}</div>
+        <div class="history-entry__sub">TRL ${e.trl} · ${e.confidence}% confidence</div>
+      </div>
+      <div class="history-entry__time">${esc(e.time)}</div>
+    </div>`
+  ).join('');
+
+  $('historyContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>06</b> Assessment History</span></div>
+        <h1 class="h1 page-head__title">Previous assessments</h1>
+        <p class="lead page-head__dek">Stored locally in your browser. Click any entry to reload its full results.</p>
+      </div>
+      <div class="page-head__aside" style="display:flex;align-items:end;justify-content:flex-end">
+        <button class="btn btn--quiet btn--sm" onclick="clearHistory()">Clear all</button>
+      </div>
+    </div>
+    <div class="history-list">${listHtml}</div>`;
+}
+
+/* ── VIEW 07: FRAMEWORK ───────────────────────────────────────────────────── */
+function renderFramework() {
+  if (!LADDER) return;
+  const activeTrl = DATA ? DATA.assessment.predicted_trl : null;
+
+  let items = LADDER.map(lvl => {
+    const isActive = lvl.level === activeTrl;
+    const criteriaHtml = (lvl.criteria || []).map(c =>
+      `<div class="crit-item">
+        <span class="mono" style="font-size:var(--fs-label);color:var(--ink-3)">${esc(c.id)}</span>
+        <span>${esc(c.description)}</span>
+        <span style="font-size:var(--fs-label);color:${c.is_mandatory ? 'var(--ink-2)' : 'var(--ink-4)'}">${c.is_mandatory ? 'Mandatory' : 'Optional'}</span>
+      </div>`
+    ).join('');
+    const evidenceHtml = (lvl.typical_evidence || []).map(e =>
+      `<li style="padding:4px 0;border-bottom:1px solid var(--rule);font-size:var(--fs-small);color:var(--ink-2)">${esc(e)}</li>`
+    ).join('');
+    return `<details class="framework-item ${isActive ? 'is-active' : ''}" ${isActive ? 'open' : ''}>
+      <summary class="fw-head">
+        <div class="fw-head__num">${lvl.level}</div>
+        <div>
+          <div class="fw-head__title">TRL ${lvl.level}: ${esc(lvl.title)}</div>
+          <div class="fw-head__env">${esc(lvl.required_environment)}</div>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <div class="fw-body">
+        <p>${esc(lvl.summary)}</p>
+        <div>
+          <div class="sec-label"><span>Mandatory Criteria</span></div>
+          <div class="criteria-list">${criteriaHtml}</div>
+        </div>
+        <div style="margin-top:var(--s-5)">
+          <div class="sec-label"><span>Typical Evidence</span></div>
+          <ul style="list-style:none;padding:0">${evidenceHtml}</ul>
+        </div>
+      </div>
+    </details>`;
+  }).join('');
+
+  $('frameworkContent').innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>07</b> Reference</span></div>
+        <h1 class="h1 page-head__title">TRL 1–9 Framework Ladder</h1>
+        <p class="lead page-head__dek">Official NASA / APCTT technology readiness definitions, criteria checklists, and validation environment thresholds used by the adjudication engine.</p>
+      </div>
+    </div>
+    ${items}`;
+}
+
+/* ── Export ────────────────────────────────────────────────────────────────── */
+function openExportDialog() {
+  if (!DATA) return;
+  $('jsonViewer').textContent = JSON.stringify(DATA, null, 2);
+  $('exportDialog').showModal();
+}
+function copyJson() {
+  navigator.clipboard.writeText(JSON.stringify(DATA, null, 2)).then(
+    () => toast('Copied', 'JSON copied to clipboard.', 'ok'),
+    () => toast('Failed', 'Could not copy.', 'err')
+  );
+}
+function downloadJson() {
+  if (!DATA) return;
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (DATA.document_info.name || 'assessment').replace(/[^a-zA-Z0-9_-]/g, '_') + '_trl.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Init ─────────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  setupDrop();
+  checkHealth();
+  loadSamples();
+  loadLadder().then(() => { if (location.hash === '#framework') renderFramework(); });
+  updateNavMeta();
+  onRoute();
+});
+</script>
+</body>
+</html>
