@@ -1,8 +1,9 @@
-# TRL DEBATE ENGINE
+# ARGUS
 ## Frontend Demonstration & Production Operations Guide
 
 > **Artifact Version:** 1.0.0  
-> **Interface Identity:** "Folio" — Scientific Editorial × Research Adjudication Instrument  
+> **Product Identity:** Argus  
+**Interface System:** "Folio" — Scientific Editorial × Research Adjudication Instrument  
 > **Compliance Standard:** NASA / APCTT Technology Readiness Level (TRL 1–9)  
 > **Frontend Architecture:** Zero-Dependency Handcrafted CSS/SVG/JS Single-File Client  
 > **Server Integration:** FastAPI REST Service (`/apps/api/src/api/static/index.html`)
@@ -11,7 +12,7 @@
 
 ## 1. Executive Overview & Design Identity
 
-The **TRL Debate Engine** frontend has been completely redesigned around **"Folio"**, an original design system rejecting generic dark dashboards, neon glow aesthetics, and repetitive card layouts in favor of an archival, scientific-editorial research instrument.
+The **Argus** frontend has been completely redesigned around **"Folio"**, an original design system rejecting generic dark dashboards, neon glow aesthetics, and repetitive card layouts in favor of an archival, scientific-editorial research instrument.
 
 ### Core Philosophy
 1. **Typography Over Color**: Hierarchy is established first through scale, weight, and optical font sizing before color is applied.
