@@ -84,7 +84,7 @@ async def list_sample_documents():
 
 
 @app.post("/api/sample-assess/{sample_id}")
-async def assess_sample_document(sample_id: str, strict_security: bool = False):
+def assess_sample_document(sample_id: str, strict_security: bool = False):
     """Run full assessment on one of the preloaded sample technical papers."""
     if sample_id not in SAMPLE_DOCUMENTS:
         raise HTTPException(status_code=404, detail=f"Sample document '{sample_id}' not found.")
@@ -100,7 +100,7 @@ async def assess_sample_document(sample_id: str, strict_security: bool = False):
 
 
 @app.post("/api/assess-text")
-async def assess_text_endpoint(req: TextAssessmentRequest):
+def assess_text_endpoint(req: TextAssessmentRequest):
     """Assess raw technical text directly."""
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="Provided document text is empty.")
@@ -114,7 +114,7 @@ async def assess_text_endpoint(req: TextAssessmentRequest):
 
 
 @app.post("/api/assess")
-async def assess_file_endpoint(
+def assess_file_endpoint(
     file: UploadFile = File(...),
     strict_security: bool = Form(False)
 ):
