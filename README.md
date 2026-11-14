@@ -1,115 +1,150 @@
-# TRL Debate Engine
+# Argus
 
-### Adversarial Multi-Agent AI for Technology Readiness Assessment
-**Competition:** Techfest 2026–27 | 2nd APCTT Hackathon 2026  
+### Evidence-Grounded Technology Readiness Assessment & Debate Intelligence
+
+**Competition:** Techfest 2026–27 · 2nd APCTT Hackathon 2026  
 **License:** Apache License 2.0  
-**Phase:** Phase 1 Complete (Specification, Canonical Contracts & Adapters)
+**Submission mode:** Local, deterministic, air-gapped inference
+
+Argus analyzes technical documents and produces an auditable Technology Readiness Level (TRL 1–9) assessment. It combines document extraction, prompt-injection-aware sanitization, milestone evidence mining, a deterministic criteria-based adjudicator, and a structured adversarial review transcript.
+
+The review experience uses three explicit perspectives:
+
+- **Optimist:** surfaces the strongest maturity evidence found in the document.
+- **Skeptic:** challenges unsupported or incomplete milestone claims.
+- **Referee:** presents the final criteria-based determination and advancement gaps.
+
+These perspectives are currently generated through deterministic application logic and templates. They are **not independent autonomous LLM agents**. Argus does not make external model/API calls in its competition inference path.
 
 ---
 
-## 1. Project Overview
+## What is implemented
 
-The **TRL Debate Engine** evaluates unstructured technical documents (research papers, patents, test reports) and assigns a defensible Technology Readiness Level (TRL 1–9) using adversarial multi-agent reasoning.
+1. **Document ingestion** — extracts text and structural chunks from PDF, TXT, and Markdown files.
+2. **Input sanitization** — removes selected hidden Unicode controls and detects common prompt-injection patterns.
+3. **Evidence mining** — matches technical milestone phrases to candidate TRL levels and retains document/chunk offsets for traceability.
+4. **Negation-aware matching** — filters milestone mentions when bounded nearby language explicitly denies that milestone.
+5. **Deterministic adjudication** — evaluates extracted evidence against the structured TRL 1–9 criteria ladder.
+6. **Prerequisite audit** — records lower-level criteria inferred from higher-level strong evidence as inferred, not as directly quoted evidence.
+7. **API and research interface** — a FastAPI service exposes the assessment workflow and serves the Argus browser interface.
+8. **Standalone submission CLI** — a local inference entry point intended for air-gapped competition execution.
 
-Instead of naive single-pass classification, the system orchestrates structured disagreement between:
-- **The Optimist:** Argues for the highest justifiable TRL supported by verified evidence.
-- **The Skeptic:** Challenges unsupported claims, identifies missing validation data, and argues for the lowest defensible TRL.
-- **The Referee:** Adjudicates claims against official criteria, applies explicit rules for implied prerequisites, resolves contradictions, and determines the final auditable TRL.
+## Architecture
 
----
+~~~text
+Argus
+├── apps/
+│   └── api/                 FastAPI routes, service layer, static browser UI
+├── packages/
+│   ├── core/                Domain models, TRL definitions, sanitization, adapters
+│   ├── document_processing/ PDF/text extraction and chunking
+│   ├── ml_inference/        Feature extraction and deterministic adjudication
+│   ├── competition_engine/  Standalone inference runner
+│   ├── agent_orchestration/ Package boundary reserved for future orchestration
+│   └── retrieval/           Package boundary reserved for future retrieval
+├── submission/              Isolated competition bundle
+├── tests/                   Unit and API regression tests
+└── scripts/                 Packaging and performance utilities
+~~~
 
-## 2. Architecture & Layer Decoupling
-
-The project maintains strict decoupling across four independent layers and a standalone competition inference package:
-
-1. **Document Processing (`packages/document_processing`):** Ingestion, layout extraction (via Apache 2.0 / MIT `pypdfium2` / `pdfminer.six`), and prompt injection defense.
-2. **ML Inference (`packages/ml_inference`):** Feature extraction, domain embeddings (`specter2_base`, `all-MiniLM-L6-v2`), and tabular ordinal classification (`LightGBM` / CORAL).
-3. **Retrieval (`packages/retrieval`):** Hybrid sparse BM25 + dense vector semantic search using Reciprocal Rank Fusion (RRF).
-4. **Agent Orchestration (`packages/agent_orchestration`):** Bounded debate state machine (up to 2 exchanges with dynamic early termination) and independent Referee adjudication.
-5. **Standalone Competition Package (`packages/competition_engine`):** Self-contained, air-gapped CLI runner (`run_inference.py`) with zero dependencies on web services, databases, or external APIs.
-6. **Web Application (`apps/api` & `apps/web`):** FastAPI backend + Supabase PostgreSQL + Next.js interactive UI.
-
----
-
-## 3. Getting Started
-
-### Prerequisites
-- Python 3.10+ (tested on Python 3.13)
-- `pip` or `uv`
-
-### Installation
-Clone the repository and install core dependencies:
-```bash
-pip install -e .
-```
-
-To install optional dependency groups:
-```bash
-# Install ML dependencies (LightGBM, PyTorch, Transformers, Sentence-Transformers)
-pip install -e ".[ml]"
-
-# Install API backend dependencies (FastAPI, Uvicorn, Supabase)
-pip install -e ".[api]"
-
-# Install development & test dependencies (pytest, pytest-cov, ruff)
-pip install -e ".[dev]"
-
-# Install all components
-pip install -e ".[all]"
-```
+The current active assessment path is deterministic and local. Hybrid BM25/vector retrieval, a dedicated Next.js frontend, Supabase persistence, and autonomous multi-agent orchestration are **not represented as implemented capabilities** in this release.
 
 ---
 
-## 4. Standalone Competition Inference CLI
+## Requirements
 
-The competition package runs completely offline:
+- Python 3.10 or newer
+- pip
+- A supported local environment for the optional LightGBM dependency
 
-```bash
-# Basic run on a technical document
+## Installation
+
+From the repository root:
+
+~~~bash
+python -m venv .venv
+~~~
+
+Activate the environment, then install the API, inference, and development dependencies:
+
+~~~powershell
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+python -m pip install -e ".[api,ml,dev]"
+~~~
+
+~~~bash
+# macOS / Linux
+source .venv/bin/activate
+python -m pip install -e ".[api,ml,dev]"
+~~~
+
+## Run the web application
+
+From the repository root:
+
+~~~bash
+uvicorn api.main:app --app-dir apps/api/src --host 127.0.0.1 --port 8000
+~~~
+
+Open http://127.0.0.1:8000.
+
+Useful endpoints:
+
+| Endpoint | Purpose |
+| --- | --- |
+| GET /api/health | Service health and active layer inventory |
+| GET /api/trl-ladder | Structured TRL 1–9 definitions |
+| GET /api/sample-documents | Preloaded demonstration documents |
+| POST /api/sample-assess/{sample_id} | Assess a preloaded sample |
+| POST /api/assess-text | Assess pasted technical text |
+| POST /api/assess | Assess an uploaded PDF, TXT, or MD file |
+
+## Run the standalone CLI
+
+The competition path is designed to operate locally without hosted LLMs or external inference APIs.
+
+~~~bash
 python run_inference.py --input path/to/document.txt
-
-# Specify custom output path
-python run_inference.py --input path/to/document.txt --output outputs/assessment.json
-
-# Run in strict security mode (rejects files with prompt injection attempts)
+python run_inference.py --input path/to/document.pdf --output assessment.json
 python run_inference.py --input path/to/document.txt --strict-security
-```
+~~~
 
-### Exit Codes
-- `0`: Success. Final assessment written to target path.
-- `1`: Invalid input (missing file, empty document, unreadable format, or security violation in strict mode).
-- `2`: CLI argument syntax error.
+Exit codes:
 
----
+- 0 — successful assessment.
+- 1 — invalid input, unreadable/empty document, or strict-security rejection.
+- 2 — command-line argument error.
 
-## 5. Running the Test Suite
+For the isolated competition bundle, follow submission/README.md and use only files contained in submission/.
 
-Run unit tests across canonical models, adapters, prompt injection defenses, and CLI interfaces:
-```bash
+## Tests and quality checks
+
+~~~bash
 python -m pytest
-```
+~~~
 
-Run tests with coverage reporting:
-```bash
-python -m pytest --cov=trl_core --cov=competition_engine
-```
+Optional local checks, when installed:
 
----
+~~~bash
+ruff check .
+python -m pytest --cov
+~~~
 
-## 6. Phase Status & Roadmap
+Do not report a benchmark, test count, or accuracy score unless it has been reproduced against the current commit and its environment.
 
-- [x] **Phase 1: Competition Specification, Contracts & Adapters**
-  - Git repository initialization and `pyproject.toml` dependency groups.
-  - Canonical Pydantic domain models (`Document`, `Chunk`, `EvidenceItem`, `AgentAssessment`, `DebateMessage`, `FinalAssessment`).
-  - Official TRL 1–9 framework definitions as structured data.
-  - `BaseInputAdapter` and `BaseOutputAdapter` with internal schema implementations.
-  - Standalone `run_inference.py` CLI with graceful failure handling.
-  - Prompt-injection security sanitizer and test harness.
-- [ ] **Phase 2: Ingestion & Tabular ML Baseline**
-- [ ] **Phase 3: Evidence Intelligence Engine**
-- [ ] **Phase 3b: Hybrid Retrieval Engine (BM25 + Vector)**
-- [ ] **Phase 4: Multi-Agent Engine & Debate Protocol**
-- [ ] **Phase 4b: Quantitative Ablation Gate (ML vs No-Debate vs Full Debate)**
-- [ ] **Phase 5: Standalone Competition Integration & Air-Gapped Freeze**
-- [ ] **Phase 6: Full Web Application (API + UI Dashboard + Debate Room + Explorer)**
-- [ ] **Phase 7: Testing, Verification & Final Submission Freeze**
+## Important evaluation limitations
+
+- Milestone matching is heuristic. Negation handling is bounded and rule-based; it is not full natural-language understanding.
+- Pattern matches are candidate evidence, not a substitute for expert review of source context.
+- Official predictive metrics require a legitimate labelled evaluation dataset. No accuracy, QWK, or MAE claims are made without that dataset.
+- The role-based review transcript is deterministic synthesis, not proof of three separately running AI agents.
+- The standalone submission bundle must be regenerated and independently verified whenever source inference code changes.
+
+## Project identity
+
+**Argus** is the project name across the repository, browser experience, API, command-line tooling, and submission documentation.
+
+## License
+
+Apache License 2.0. See the LICENSE file when present in the repository.
