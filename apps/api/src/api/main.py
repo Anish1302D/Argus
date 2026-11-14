@@ -1,5 +1,5 @@
 """
-TRL Debate Engine - FastAPI Server.
+Argus - FastAPI application server.
 Provides REST API endpoints and serves the interactive adversarial debate web dashboard.
 """
 
@@ -17,8 +17,8 @@ from api.service import SAMPLE_DOCUMENTS, get_service
 from trl_core.trl_definitions import get_all_definitions
 
 app = FastAPI(
-    title="TRL Debate Engine API",
-    description="Adversarial Multi-Agent AI for Technology Readiness Assessment",
+    title="Argus API",
+    description="Evidence-grounded technology readiness assessment with deterministic adjudication and adversarial review synthesis.",
     version="0.1.0",
 )
 
@@ -56,12 +56,12 @@ async def health_check():
         "status": "HEALTHY",
         "version": "0.1.0",
         "competition": "Techfest 2026-27 | 2nd APCTT Hackathon 2026",
-        "engine": "TRL Multi-Agent Adversarial Debate & Deterministic Adjudication Engine",
+        "engine": "Argus evidence-grounded readiness assessment engine",
         "layers": {
             "layer_1_document_processing": "Active (pypdfium2 / UTF-8)",
-            "layer_2_ml_inference": "Active (25-dim features + LightGBM/Rule gate)",
-            "layer_3_agent_orchestration": "Active (Optimist, Skeptic, Referee)",
-            "layer_4_web_interface": "Active (FastAPI + Tailwind/Charts)",
+            "layer_2_ml_inference": "Active (25-dimensional evidence features + deterministic rule adjudication)",
+            "layer_3_review_synthesis": "Active (deterministic Optimist, Skeptic, and Referee review synthesis; no independent LLM agents)",
+            "layer_4_web_interface": "Active (FastAPI + static Argus research interface)",
         }
     }
 
