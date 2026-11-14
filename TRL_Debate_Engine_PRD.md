@@ -1,6 +1,6 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
 
-# TRL DEBATE ENGINE
+# ARGUS
 
 ### Adversarial Multi-Agent AI for Technology Readiness Assessment
 
@@ -17,7 +17,9 @@ pipeline
 
 ## 1.1 Product Name
 
-TRL Debate Engine
+Argus
+
+> **Implementation-status note:** This document describes the intended product requirements and target experience. It must not be read as proof that every proposed architecture component is currently implemented. The active release uses deterministic evidence mining and rule-based adjudication with structured review synthesis; see README.md for the verified implementation boundary.
 
 ## 1.2 Product Vision
 
@@ -26,7 +28,7 @@ assessment system that evaluates unstructured technical documentation
 using adversarial multi-agent AI.
 
 Unlike conventional AI systems that ask a single model to classify a
-document, TRL Debate Engine introduces structured disagreement between
+document, Argus introduces structured disagreement between
 specialised AI agents.
 
 Three reasoning roles participate:
@@ -48,7 +50,7 @@ Traditional AI assessment:
 
 Document → AI prediction → Result.
 
-TRL Debate Engine:
+Argus:
 
 Document → Evidence extraction → Independent opposing assessments →
 Adversarial debate → Independent adjudication → Auditable TRL
@@ -1036,7 +1038,7 @@ Do not make up model accuracy or confidence scores.
 # 19. INSTRUCTIONS TO THE DEVELOPMENT AGENT
 
 You are acting as the lead AI engineer, ML architect, backend developer
-and product engineer for TRL Debate Engine.
+and product engineer for Argus.
 
 Before implementation:
 

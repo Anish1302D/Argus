@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Root CLI entrypoint for TRL Debate Engine.
-Delegates to packages/competition_engine/run_inference.py.
+Root CLI entrypoint for Argus.
+Delegates to the standalone Argus competition inference runner.
 """
 
 import sys

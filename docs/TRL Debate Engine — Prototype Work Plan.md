@@ -1,6 +1,6 @@
-# TRL Debate Engine — Prototype Work Plan
+# Argus — Prototype Work Plan
 
-**Repository:** `ishaj306/trl-debate-engine`  
+**Repository:** `Anish1302D/Argus`  
 **Plan date:** November 10, 2026  
 **Target:** A credible, runnable prototype and competition submission candidate by November 15, 2026 (23:59 IST, per the repository checklist).  
 **Scope assumption:** Prioritize a trustworthy standalone assessment pipeline and a clear demo. A polished web application is not a prerequisite for this deadline.
