@@ -1,7 +1,7 @@
 """
-Core Service Layer for TRL Debate Engine API.
+Core service layer for the Argus API.
 Coordinates document ingestion, threat sanitization, evidence extraction,
-adversarial multi-agent debate orchestration, and deterministic referee adjudication.
+deterministic criteria adjudication, and structured review-transcript synthesis.
 """
 
 from pathlib import Path
