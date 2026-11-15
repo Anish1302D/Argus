@@ -1459,16 +1459,71 @@ function renderDetermination(d) {
     </div>`
   ).join('');
 
+  // Contradictions / Document Tensions
+  let contraHtml = '';
+  if (a.contradictions && a.contradictions.length > 0) {
+    contraHtml = `
+    <div class="folio section-gap" style="border-left:3px solid var(--err)">
+      <div class="folio__head">
+        <span class="folio__num" style="color:var(--err)">CONFLICT</span>
+        <h2 class="folio__title">Document Tensions & Contradictions</h2>
+        <p class="folio__note">Internal discrepancies detected between abstract claims and experimental limitations.</p>
+      </div>
+      <div class="folio__body">
+        ${a.contradictions.map(c => `
+          <div class="crit-item" style="border-bottom:1px solid var(--rule);padding:10px 0">
+            <span class="st" style="background:var(--err)"></span>
+            <div>
+              <div style="font-weight:600;font-size:var(--fs-small);color:var(--err)">${esc(c.id || 'CONTRA')} · Severity: ${esc(c.severity || 'HIGH')}</div>
+              <div style="font-size:var(--fs-small);margin-top:4px">${esc(c.explanation || '')}</div>
+              ${c.resolution_rationale ? `<div style="font-size:var(--fs-label);color:var(--ink-3);margin-top:4px"><em>Resolution:</em> ${esc(c.resolution_rationale)}</div>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Uncertainty Profile & Calibration
+  let uncertaintyHtml = '';
+  if (a.uncertainty_profile) {
+    const u = a.uncertainty_profile;
+    uncertaintyHtml = `
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">EPISTEMIC</span>
+        <h2 class="folio__title">Uncertainty Profile & Calibration</h2>
+        <p class="folio__note">Decoupled evaluation of linguistic extraction, criteria coverage, and conflict penalties.</p>
+      </div>
+      <div class="folio__body">
+        <div class="facts--row" style="border-top:1px solid var(--ink);margin-bottom:var(--s-4)">
+          <div><dt>Extraction Conf.</dt><dd class="mono">${(u.extraction_confidence * 100).toFixed(1)}%</dd></div>
+          <div><dt>Criteria Coverage</dt><dd class="mono">${(u.criteria_coverage * 100).toFixed(1)}%</dd></div>
+          <div><dt>Conflict Penalty</dt><dd class="mono" style="color:${u.conflict_penalty > 0 ? 'var(--err)' : 'inherit'}">-${(u.conflict_penalty * 100).toFixed(1)}%</dd></div>
+          <div><dt>Composite Certainty</dt><dd class="mono" style="font-weight:600;color:var(--accent-ink)">${(u.composite_certainty * 100).toFixed(1)}%</dd></div>
+        </div>
+        <div style="font-size:var(--fs-label);color:var(--ink-3);line-height:1.6">
+          <p><strong>Calibration Disclosure:</strong> ${esc(u.calibration_status)} — Evaluated under air-gapped competition constraints. Confidence metrics are bounded heuristics avoiding uncalibrated statistical overconfidence.</p>
+          ${(u.notes || []).map(n => `<p>• ${esc(n)}</p>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
   $('determinationContent').innerHTML = `
     <div class="page-head">
       <div>
         <div class="page-head__eyebrow"><span class="eyebrow"><b>03</b> TRL Determination</span></div>
         <h1 class="h1 page-head__title">Official readiness adjudication</h1>
         <p class="lead page-head__dek">Final determination by the Referee after adversarial debate, criteria verification, and implied prerequisite audit.</p>
+        <div style="margin-top:var(--s-4);display:flex;gap:12px">
+          <button class="btn btn--primary" onclick="exportReport()">Export Technical Report (.md)</button>
+          <button class="btn btn--subtle" onclick="window.print()">Print Dossier</button>
+        </div>
       </div>
       <div class="page-head__aside">
         <div class="facts">
-          <div><dt>Method</dt><dd>Rule-based + ML gate</dd></div>
+          <div><dt>Method</dt><dd>Argus 2.0.0 Rule-based</dd></div>
           <div><dt>Confidence</dt><dd class="mono tnum" style="font-size:1.0625rem;font-weight:600">${a.confidence_percent}%</dd></div>
           <div><dt>Environment</dt><dd>${esc(a.required_environment)}</dd></div>
         </div>
@@ -1497,6 +1552,9 @@ function renderDetermination(d) {
         </div>
       </div>
     </div>
+
+    ${contraHtml}
+    ${uncertaintyHtml}
 
     <div class="folio section-gap">
       <div class="folio__head">
@@ -1552,8 +1610,8 @@ function renderEvidence(d) {
     return 'x';
   }
 
-  let rows = ledger.map(e =>
-    `<div class="ev-row" data-cat="${esc(e.category)}" data-text="${esc(e.text.toLowerCase())}">
+  let rows = ledger.map((e, idx) =>
+    `<div class="ev-row" data-cat="${esc(e.category)}" data-text="${esc(e.text.toLowerCase())}" onclick="toggleEvInspection(${idx})" style="cursor:pointer">
       <div class="ev-row__id">${esc(e.id)}</div>
       <div>
         <div class="ev-row__text">${esc(e.text)}</div>
@@ -1561,6 +1619,14 @@ function renderEvidence(d) {
           <span class="ev-row__cat">${esc(e.category.replace(/_/g, ' '))}</span>
           <span><span class="meter" data-v="${strengthLevel(e.strength)}"><i></i><i></i><i></i></span> ${esc(e.strength.replace(/_/g, ' '))}</span>
           ${e.target_trl != null ? `<span class="trl">TRL <b>${e.target_trl}</b></span>` : ''}
+          <span style="color:var(--accent-ink)">[Inspect Provenance]</span>
+        </div>
+        <div id="ev-inspect-${idx}" class="ev-inspect-box" style="display:none;margin-top:12px;padding:12px;background:var(--paper-2);border-left:2px solid var(--accent);font-family:var(--f-mono);font-size:var(--fs-label)">
+          <div style="font-weight:600;margin-bottom:6px;color:var(--ink)">SOURCE PROVENANCE & CONTEXT:</div>
+          <div><strong>Location:</strong> Page ${e.page} · Section: ${esc(e.section)}</div>
+          <div><strong>Classification:</strong> ${esc(e.category)} · <strong>Strength:</strong> ${esc(e.strength)}</div>
+          <div style="margin-top:6px"><strong>Verbatim Excerpt:</strong></div>
+          <div style="background:var(--paper-3);padding:6px 8px;margin-top:4px;border:1px solid var(--rule)">${esc(e.text)}</div>
         </div>
       </div>
       <div class="ev-row__cat" style="display:none">${esc(e.category)}</div>
@@ -1606,6 +1672,88 @@ function searchEvidence(q) {
   $$('.ev-row', $('evRows')).forEach(r => {
     r.style.display = r.dataset.text.includes(q) ? '' : 'none';
   });
+}
+
+function toggleEvInspection(idx) {
+  const el = document.getElementById(`ev-inspect-${idx}`);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function exportReport() {
+  if (!CURRENT_DATA) {
+    alert("Please evaluate a technical document before exporting.");
+    return;
+  }
+  const d = CURRENT_DATA;
+  const a = d.assessment || {};
+  const doc = d.document_info || {};
+  const unc = a.uncertainty_profile || {};
+  const gap = a.gap_report || {};
+  const aud = a.audit_trail || {};
+  const ledger = d.evidence_ledger || [];
+
+  let report = `# ARGUS TECHNICAL ASSESSMENT REPORT\n`;
+  report += `**Document Name:** ${doc.name || 'Technical Document'}\n`;
+  report += `**Evaluated TRL:** TRL ${a.predicted_trl} — ${a.trl_title || ''}\n`;
+  report += `**Composite Certainty:** ${a.confidence_percent || 0}%\n`;
+  report += `**Methodology Version:** 2.0.0-argus\n`;
+  report += `**Reproducibility Hash:** \`${aud.reproducibility_hash || 'N/A'}\`\n\n`;
+  report += `---\n\n## 1. Executive Summary\n${a.justification || ''}\n\n`;
+  report += `**Operating Environment:** ${a.required_environment || ''}\n\n`;
+  
+  if (unc.composite_certainty != null) {
+    report += `## 2. Uncertainty Profile & Calibration\n`;
+    report += `- Extraction Confidence: ${(unc.extraction_confidence * 100).toFixed(1)}%\n`;
+    report += `- Criteria Coverage: ${(unc.criteria_coverage * 100).toFixed(1)}%\n`;
+    report += `- Conflict Penalty: ${(unc.conflict_penalty * 100).toFixed(1)}%\n`;
+    report += `- Calibration Status: ${unc.calibration_status}\n\n`;
+  }
+
+  report += `## 3. Verified Criteria\n`;
+  (a.satisfied_criteria || []).forEach(c => {
+    report += `- [X] ${c}\n`;
+  });
+  report += `\n`;
+
+  if (a.missing_criteria && a.missing_criteria.length > 0) {
+    report += `## 4. Next-Level Validation Gaps (TRL ${Math.min((a.predicted_trl || 1) + 1, 9)})\n`;
+    a.missing_criteria.forEach(m => {
+      report += `- [ ] ${m}\n`;
+    });
+    report += `\n`;
+  }
+
+  if (a.implied_prerequisites_audit && a.implied_prerequisites_audit.length > 0) {
+    report += `## 5. Implied Prerequisites Audit\n`;
+    a.implied_prerequisites_audit.forEach(p => {
+      report += `- ${p.criterion_id} (TRL ${p.target_level}) inferred from TRL ${p.inferred_from_trl}: ${p.rationale}\n`;
+    });
+    report += `\n`;
+  }
+
+  if (gap.recommended_activities && gap.recommended_activities.length > 0) {
+    report += `## 6. Actionable Engineering Recommendations\n`;
+    gap.recommended_activities.forEach((rec, i) => {
+      report += `${i + 1}. ${rec}\n`;
+    });
+    report += `\n`;
+  }
+
+  report += `## 7. Evidence Ledger (${ledger.length} items)\n`;
+  ledger.slice(0, 15).forEach(e => {
+    report += `- **${e.id}** [TRL ${e.target_trl || '-'}] (${e.category}, ${e.strength}): "${e.text.substring(0, 120)}..." (P.${e.page})\n`;
+  });
+
+  report += `\n---\n*Report generated deterministically by ARGUS Research Intelligence Engine.*\n`;
+
+  const blob = new Blob([report], { type: 'text/markdown;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Argus_Assessment_Report_${(doc.name || 'document').replace(/[^a-zA-Z0-9_-]/g, '_')}.md`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 /* ── VIEW 05: ANALYTICS ───────────────────────────────────────────────────── */
