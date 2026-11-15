@@ -5,7 +5,7 @@
   "package_version": "1.0.0",
   "base_id": "apctt-base-9e7fe1324bb6",
   "entrypoint": "participant_module.adapter:AssessmentModule",
-  "declared_package_sha256": "002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc",
+  "declared_package_sha256": "35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d",
   "license": "MIT",
   "compute": {
     "device": "cpu"

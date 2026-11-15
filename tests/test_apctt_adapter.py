@@ -787,8 +787,29 @@ def test_scenario_w_official_example_request_execution(tmp_path: Path):
 
 
 def test_scenario_x_submission_zip_and_fastapi_apctt_endpoints():
-    """Scenario X: Verify artifacts/apctt/argus_submission.zip passes make_submission.py --check and FastAPI APCTT routes work."""
+    """Scenario X: Verify LICENSE, THIRD_PARTY_NOTICES.md, artifacts/apctt/argus_submission.zip (--check), and FastAPI APCTT routes."""
+    import zipfile
+
     assert SUBMISSION_ZIP.is_file(), "artifacts/apctt/argus_submission.zip must exist"
+
+    # Priority 0 & 2: Verify LICENSE has populated copyright line and zero unresolved template placeholders
+    lic_text = (SUBMISSION_BUNDLE / "participant_module" / "LICENSE").read_text(encoding="utf-8")
+    assert "Copyright (c) 2026 Team Argus (Anish Mogam)" in lic_text
+    assert "Permission is hereby granted, free of charge" in lic_text
+    assert 'THE SOFTWARE IS PROVIDED "AS IS"' in lic_text
+    for placeholder in ("<year>", "<copyright holders>", "[year]", "[fullname]"):
+        assert placeholder not in lic_text, f"Unresolved placeholder {placeholder} in LICENSE"
+
+    notices_text = (SUBMISSION_BUNDLE / "participant_module" / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
+    for required_token in ("apctt-base-9e7fe1324bb6", "2.5.3", "2.13.5", "6.19.0", "Apache-2.0", "BSD-3-Clause"):
+        assert required_token in notices_text
+
+    with zipfile.ZipFile(SUBMISSION_ZIP, "r") as zf:
+        zip_lic = zf.read("participant_module/LICENSE").decode("utf-8")
+        assert "Copyright (c) 2026 Team Argus (Anish Mogam)" in zip_lic
+        for placeholder in ("<year>", "<copyright holders>", "[year]", "[fullname]"):
+            assert placeholder not in zip_lic
+
     proc = subprocess.run(
         [
             sys.executable,
@@ -894,10 +915,18 @@ def test_scenario_y_security_prompt_injection_unicode_and_path_traversal(tmp_pat
 
 def test_scenario_z1_isolated_submission_import_without_repo_root(tmp_path: Path):
     """
-    Scenario Z1 (Section 4 & 14.B): Verify `participant_module.adapter:AssessmentModule`
-    imports and executes in a fresh Python subprocess where ONLY `apctt_submission/`
-    is on PYTHONPATH (and the development repo root is NOT on sys.path).
+    Scenario Z1 (Priority 5.D): Extract `artifacts/apctt/argus_submission.zip` into a clean
+    temporary directory and verify `participant_module.adapter:AssessmentModule` imports,
+    instantiates, loads, assesses, resets, and closes in a fresh Python subprocess where ONLY
+    the extracted submission directory is on PYTHONPATH (no repo-root imports, offline mode).
     """
+    import zipfile
+
+    extracted_dir = tmp_path / "extracted_submission"
+    extracted_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(SUBMISSION_ZIP, "r") as zf:
+        zf.extractall(extracted_dir)
+
     case = make_apctt_case(
         tmp_path,
         case_id="ISOLATED-IMPORT-001",
@@ -916,31 +945,34 @@ def test_scenario_z1_isolated_submission_import_without_repo_root(tmp_path: Path
     script = f"""
 import json, sys
 from pathlib import Path
-sys.path = [p for p in sys.path if "Argus" not in p or "apctt_submission" in p]
-sys.path.insert(0, {str(SUBMISSION_BUNDLE)!r})
+sys.path = [p for p in sys.path if "Argus" not in p]
+sys.path.insert(0, {str(extracted_dir)!r})
 
 from participant_module.adapter import AssessmentModule
 checklist = json.loads(Path({str(KIT_CPU / 'contracts' / 'checklist.official.json')!r}).read_text(encoding='utf-8'))
 case = json.loads(Path({str(case_file)!r}).read_text(encoding='utf-8'))
 
 mod = AssessmentModule()
-mod.load({{"checklist": checklist, "settings": {{"rules_path": "trl_rules.json"}}}}, Path({str(SUBMISSION_BUNDLE / 'assets')!r}))
+mod.load({{"checklist": checklist, "settings": {{"rules_path": "trl_rules.json"}}}}, Path({str(extracted_dir / 'assets')!r}))
 res = mod.assess(case, None)
 mod.reset_case()
 mod.close()
-print(json.dumps({{"status": res["assessment_status"], "trl": res["predicted_trl"]}}))
+print(json.dumps(res))
 """
     env = {
         "PATH": os.environ.get("PATH", ""),
         "SystemRoot": os.environ.get("SystemRoot", r"C:\Windows"),
-        "PYTHONPATH": str(SUBMISSION_BUNDLE),
+        "PYTHONPATH": str(extracted_dir),
         "PYTHONNOUSERSITE": "1",
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1",
     }
     proc = subprocess.run([sys.executable, "-c", script], env=env, capture_output=True, text=True)
     assert proc.returncode == 0, proc.stderr
-    out = json.loads(proc.stdout.strip())
-    assert out["status"] == "completed"
-    assert out["trl"] == 4
+    res = json.loads(proc.stdout.strip())
+    assert validate_result(res, case=case, checklist=OFFICIAL_CHECKLIST) == []
+    assert res["assessment_status"] == "completed"
+    assert res["predicted_trl"] == 4
 
 
 def test_scenario_z2_cold_worker_subprocess_protocol(tmp_path: Path):

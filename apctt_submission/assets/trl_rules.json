@@ -49,22 +49,24 @@
       "phrases": [
         "operational environment",
         "field deployment",
-        "flood-inundation map library",
-        "streamgage"
+        "operational demonstration",
+        "field trial"
       ]
     },
     "APCTT-C08": {
       "phrases": [
         "completed and qualified",
         "qualification testing",
-        "user guide"
+        "user guide",
+        "acceptance testing"
       ]
     },
     "APCTT-C09": {
       "phrases": [
         "mission operations",
         "proven in successful",
-        "monitoring storm tide"
+        "operational service",
+        "mission proven"
       ]
     },
     "APCTT-C10": {
