@@ -1,0 +1,5 @@
+{
+  "schema": "argus-trl-rules-v1",
+  "description": "Domain-independent TRL milestone and cross-cutting evidence rules for ARGUS.",
+  "criteria": {}
+}

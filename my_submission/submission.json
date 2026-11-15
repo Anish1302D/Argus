@@ -1,0 +1,17 @@
+{
+  "submission_version": "apctt-submission-v3",
+  "team": "argus",
+  "package_id": "argus-trl-engine",
+  "package_version": "1.0.0",
+  "base_id": "apctt-base-9e7fe1324bb6",
+  "entrypoint": "participant_module.adapter:AssessmentModule",
+  "declared_package_sha256": "7b0d9d351578a757456b0fca017bc55d594f9d32cf420d35597daeadd26643d8",
+  "license": "MIT",
+  "compute": {
+    "device": "cpu"
+  },
+  "settings": {
+    "rules_path": "trl_rules.json"
+  },
+  "models": []
+}

@@ -23,7 +23,14 @@ def package_submission():
     sub_pkg_dir = SUBMISSION_DIR / "packages"
     sub_pkg_dir.mkdir(parents=True, exist_ok=True)
 
-    required_pkgs = ["core", "document_processing", "ml_inference", "competition_engine"]
+    required_pkgs = [
+        "core",
+        "document_processing",
+        "ml_inference",
+        "retrieval",
+        "agent_orchestration",
+        "competition_engine",
+    ]
     for pkg in required_pkgs:
         src = ROOT_DIR / "packages" / pkg
         dest = sub_pkg_dir / pkg

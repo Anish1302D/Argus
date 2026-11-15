@@ -732,6 +732,9 @@ html[data-theme="graphite"] .proc-overlay { background: rgb(0 0 0 / .7); }
       <li><a href="#framework" class="idx-link" data-view="framework">
         <span class="idx-num">07</span><span class="idx-name">TRL 1–9 Framework</span><span class="idx-meta">9 levels</span>
       </a></li>
+      <li><a href="#apctt" class="idx-link" data-view="apctt">
+        <span class="idx-num">08</span><span class="idx-name">APCTT Validation Centre</span><span class="idx-meta">Stage 1</span>
+      </a></li>
     </ul>
 
     <div class="index__foot">
@@ -908,6 +911,11 @@ html[data-theme="graphite"] .proc-overlay { background: rgb(0 0 0 / .7); }
         <div id="frameworkContent"><div class="empty-inline">Loading framework…</div></div>
       </section>
 
+      <!-- VIEW 08: APCTT VALIDATION CENTRE -->
+      <section id="view-apctt" class="view" hidden role="region" aria-label="APCTT Validation Centre">
+        <div id="apcttContent"><div class="empty-inline">Loading APCTT Validation Centre…</div></div>
+      </section>
+
     </main>
 
     <footer class="colophon">
@@ -1012,8 +1020,8 @@ function openIndex() { $('indexRail').classList.add('is-open'); $('scrim').class
 function closeIndex() { $('indexRail').classList.remove('is-open'); $('scrim').classList.remove('is-on'); document.body.classList.remove('is-locked'); }
 
 /* ── Router ───────────────────────────────────────────────────────────────── */
-const VIEWS = ['intake','dossier','debate','determination','evidence','analytics','history','framework'];
-const VIEW_TITLES = { intake:'New Assessment', dossier:'Document Dossier', debate:'Debate Transcript', determination:'TRL Determination', evidence:'Evidence Explorer', analytics:'Analytics', history:'Assessment History', framework:'TRL 1–9 Framework' };
+const VIEWS = ['intake','dossier','debate','determination','evidence','analytics','history','framework','apctt'];
+const VIEW_TITLES = { intake:'New Assessment', dossier:'Document Dossier', debate:'Debate Transcript', determination:'TRL Determination', evidence:'Evidence Explorer', analytics:'Analytics', history:'Assessment History', framework:'TRL 1–9 Framework', apctt:'APCTT Validation Centre' };
 
 function navigate(view) {
   if (!VIEWS.includes(view)) view = 'intake';
@@ -1039,6 +1047,7 @@ function onRoute() {
   // Lazy render
   if (view === 'history') renderHistory();
   if (view === 'framework' && LADDER) renderFramework();
+  if (view === 'apctt') renderApcttCentre();
 }
 
 window.addEventListener('hashchange', onRoute);
@@ -1952,6 +1961,173 @@ function renderFramework() {
       </div>
     </div>
     ${items}`;
+}
+
+/* ── VIEW 08: APCTT VALIDATION CENTRE ─────────────────────────────────────── */
+let APCTT_SUMMARY = null;
+let APCTT_CASE_RESULT = null;
+
+async function renderApcttCentre() {
+  const container = $('apcttContent');
+  if (!APCTT_SUMMARY) {
+    try {
+      const r = await fetch('/api/apctt/validation-summary');
+      APCTT_SUMMARY = await r.json();
+    } catch (e) {
+      container.innerHTML = `<div class="empty-inline">Could not load APCTT Validation Centre: ${esc(e.message)}</div>`;
+      return;
+    }
+  }
+  const s = APCTT_SUMMARY;
+  const mi = s.manifest_integrity || {};
+  const la = s.license_audit || {};
+  const sb = s.submission_bundle || {};
+  const benchmarks = (s.smoke_benchmarks || []).map(b => `
+    <tr>
+      <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule);font-weight:600">${esc(b.case_id)}</td>
+      <td style="padding:10px 8px;border-bottom:1px solid var(--rule)">${esc(b.title)}</td>
+      <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule)">${esc(b.expected)}</td>
+      <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule);color:var(--ok);font-weight:600">${esc(b.predicted_status)}${b.predicted_trl ? ' (TRL ' + b.predicted_trl + ')' : ''}</td>
+      <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule)">${b.met_criteria}/12</td>
+      <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule);color:var(--ok)">${b.contract_issues} issues</td>
+    </tr>`).join('');
+
+  let caseResultHtml = '';
+  if (APCTT_CASE_RESULT && APCTT_CASE_RESULT.result) {
+    const res = APCTT_CASE_RESULT.result;
+    const chk = APCTT_CASE_RESULT.checklist || { criteria: [] };
+    const rows = (chk.criteria || []).map(c => {
+      const cid = c.criterion_id;
+      const st = (res.criterion_status || {})[cid] || 'insufficient evidence';
+      const refs = (res.evidence_reference || {})[cid] || [];
+      const miss = (res.missing_evidence || {})[cid] || '';
+      const rat = (res.criterion_rationale || {})[cid] || '';
+      const badgeColor = st === 'met' ? 'var(--ok)' : (st === 'not met' ? 'var(--err)' : 'var(--warn)');
+      const refHtml = refs.map(r => `<div class="small" style="margin-top:4px"><span class="mono" style="font-weight:600">[${esc(r.document_id)} · p.${r.page}]</span> “${esc(r.supporting_span)}”</div>`).join('');
+      return `<tr>
+        <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule);font-weight:600;white-space:nowrap">${esc(cid)}</td>
+        <td style="padding:10px 8px;border-bottom:1px solid var(--rule)">
+          <div>${esc(c.description)}</div>
+          ${refHtml}
+          ${miss ? `<div class="small" style="margin-top:4px;color:var(--warn)">Missing: ${esc(miss)}</div>` : ''}
+          ${rat ? `<div class="small muted" style="margin-top:2px">${esc(rat)}</div>` : ''}
+        </td>
+        <td class="mono" style="padding:10px 8px;border-bottom:1px solid var(--rule);color:${badgeColor};font-weight:600;white-space:nowrap">${esc(st)}</td>
+      </tr>`;
+    }).join('');
+    const unc = res.uncertainty ? `[TRL ${res.uncertainty.lower}–${res.uncertainty.upper}]` : '—';
+    caseResultHtml = `
+      <div class="folio section-gap">
+        <div class="folio__head">
+          <span class="folio__num">RESULT</span>
+          <h2 class="folio__title">Official APCTT AssessmentModule Output</h2>
+          <p class="folio__note">Case: ${esc(res.case_id)} · Checklist: ${esc(res.checklist_version)}</p>
+        </div>
+        <div class="folio__body">
+          <div class="facts--row" style="border-top:1px solid var(--ink);margin-bottom:var(--s-5)">
+            <div><dt>Status</dt><dd class="mono" style="font-weight:600">${esc(res.assessment_status)}</dd></div>
+            <div><dt>Predicted TRL</dt><dd class="mono" style="font-weight:600;color:var(--accent)">${res.predicted_trl != null ? 'TRL ' + res.predicted_trl : 'Abstained / Null'}</dd></div>
+            <div><dt>Uncertainty</dt><dd class="mono">${esc(unc)}</dd></div>
+            <div><dt>Abstention / Error</dt><dd class="mono">${esc(res.abstention_reason || res.error_code || 'None')}</dd></div>
+          </div>
+          ${res.trl_rationale ? `<p class="read" style="margin-bottom:var(--s-5)">${esc(res.trl_rationale)}</p>` : ''}
+          <table style="width:100%;border-collapse:collapse;text-align:left">
+            <thead>
+              <tr style="border-bottom:2px solid var(--ink)">
+                <th class="eyebrow" style="padding:8px">Criterion</th>
+                <th class="eyebrow" style="padding:8px">Description, Verbatim Page Evidence & Rationale</th>
+                <th class="eyebrow" style="padding:8px">Status</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  const sampleButtons = (SAMPLES || []).map(smp =>
+    `<button class="btn btn--sm" onclick="runApcttSample('${esc(smp.id)}')">Run APCTT Adapter: ${esc(smp.title)}</button>`
+  ).join(' ');
+
+  container.innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-head__eyebrow"><span class="eyebrow"><b>08</b> APCTT Stage 1 MVP</span></div>
+        <h1 class="h1 page-head__title">APCTT Participant Kit Validation & Adapter Centre</h1>
+        <p class="lead page-head__dek">Live verification of the official <code class="mono">${esc(s.entrypoint)}</code> lifecycle, dynamic 12-criterion checklist evaluation, manifest integrity, and MIT license compliance.</p>
+      </div>
+      <div class="page-head__aside">
+        <div class="facts">
+          <div><dt>Kit Version</dt><dd class="mono">${esc(s.kit_version)} (${esc(s.worker_protocol)})</dd></div>
+          <div><dt>Base Env</dt><dd class="mono">${esc(s.base_id)}</dd></div>
+          <div><dt>License</dt><dd class="mono" style="color:var(--ok);font-weight:600">${esc(la.team_license)} (${esc(la.status)})</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio">
+      <div class="folio__head">
+        <span class="folio__num">AUDIT</span>
+        <h2 class="folio__title">Participant Kit & Submission Package Status</h2>
+      </div>
+      <div class="folio__body">
+        <div class="facts--row" style="border-top:1px solid var(--ink)">
+          <div><dt>CPU Manifest</dt><dd class="mono" style="color:var(--ok)">${mi.cpu_kit_verified}/${mi.cpu_kit_files} SHA-256 OK</dd></div>
+          <div><dt>CUDA Manifest</dt><dd class="mono" style="color:var(--ok)">${mi.cuda_kit_verified}/${mi.cuda_kit_files} SHA-256 OK</dd></div>
+          <div><dt>License Check</dt><dd class="mono" style="color:var(--ok)">${la.allowed} allowed, ${la.denied} denied</dd></div>
+          <div><dt>Submission ZIP</dt><dd class="mono" style="color:var(--ok)">${esc(sb.zip_name)} (${esc(sb.status)})</dd></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">SMOKE</span>
+        <h2 class="folio__title">Official Kit Smoke Cases & Reference Alignment</h2>
+        <p class="folio__note">Executed via <code class="mono">apctt_runtime/worker.py</code> and checked by <code class="mono">validate_result</code>.</p>
+      </div>
+      <div class="folio__body">
+        <table style="width:100%;border-collapse:collapse;text-align:left">
+          <thead>
+            <tr style="border-bottom:2px solid var(--ink)">
+              <th class="eyebrow" style="padding:8px">Case ID</th>
+              <th class="eyebrow" style="padding:8px">Title</th>
+              <th class="eyebrow" style="padding:8px">Organizer Ref</th>
+              <th class="eyebrow" style="padding:8px">Argus Output</th>
+              <th class="eyebrow" style="padding:8px">Met Criteria</th>
+              <th class="eyebrow" style="padding:8px">Contract</th>
+            </tr>
+          </thead>
+          <tbody>${benchmarks}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="folio section-gap">
+      <div class="folio__head">
+        <span class="folio__num">LIVE RUN</span>
+        <h2 class="folio__title">Execute Official AssessmentModule</h2>
+        <p class="folio__note">Run any scenario through <code class="mono">load() → assess() → reset_case() → close()</code>.</p>
+      </div>
+      <div class="folio__body">
+        <div style="display:flex;flex-wrap:wrap;gap:8px">${sampleButtons}</div>
+      </div>
+    </div>
+    ${caseResultHtml}`;
+}
+
+async function runApcttSample(sampleId) {
+  showProcessing(true);
+  try {
+    const r = await fetch('/api/apctt/assess-sample/' + encodeURIComponent(sampleId), { method: 'POST' });
+    APCTT_CASE_RESULT = await r.json();
+    showProcessing(false);
+    renderApcttCentre();
+    toast('APCTT Module Executed', `Status: ${APCTT_CASE_RESULT.result.assessment_status}`, 'ok');
+  } catch (e) {
+    showProcessing(false);
+    toast('APCTT Execution Error', e.message, 'err');
+  }
 }
 
 /* ── Export ────────────────────────────────────────────────────────────────── */

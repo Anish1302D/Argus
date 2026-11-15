@@ -282,11 +282,24 @@ python submission/run_inference.py -i document.txt --strict-security
 
 ## Scientific Evaluation & Benchmark Results
 
-### Complete Test Suite (69/69 Passing)
+### Complete Test Suite (83/83 Passing)
 ```bash
 python -m pytest -v
 ```
-All 69 unit, regression, security, adversarial, and API contract tests pass with 100% reliability in under 60 seconds.
+All 83 unit, regression, security, adversarial, API, and APCTT Stage 1 contract tests (`tests/test_apctt_adapter.py`, Scenarios A–X) pass with 100% reliability in ~7 seconds.
+
+### Official APCTT Participant Kit (`v0.5.0`) Integration & Submission Bundle
+ARGUS implements the exact official Stage 1 competition contract (`participant_module.adapter:AssessmentModule`, worker protocol `apctt-worker-v2`, base environment `apctt-base-9e7fe1324bb6`):
+
+- **Submission Bundle Source:** [`my_submission/`](my_submission/)
+- **Packaged Submission Archive:** `argus_submission.zip` (`VALID` via `tools/make_submission.py --check`)
+- **License Audit:** `3 allowed, 0 review, 0 denied` via `tools/check_licenses.py --bundle my_submission --web apps/api`
+- **Public Smoke Cases (`apctt_runtime/worker.py`):**
+  - `DEMO-001`: `abstained` (`insufficient evidence`, `APCTT-C04` met, `0` contract issues, `28.4 ms`)
+  - `USGS-SDG-012`: `completed` (`predicted_trl = 4`, 7/12 criteria met, `0` contract issues, `1,022 ms`)
+  - `USGS-SDG-040`: `completed` (`predicted_trl = 7`, 10/12 criteria met, `0` contract issues, `888 ms`)
+  - `USGS-SDG-061`: `completed` (`predicted_trl = 6`, 9/12 criteria met, `0` contract issues, `2,410 ms`)
+- **APCTT Engineering Documentation:** [`docs/apctt/01_official_kit_audit.md`](docs/apctt/01_official_kit_audit.md) through [`docs/apctt/10_final_submission_guide.md`](docs/apctt/10_final_submission_guide.md)
 
 ### Ablation Study Benchmark (`scripts/run_ablation_study.py`)
 Evaluated across the 12-document adversarial test corpus:
@@ -317,7 +330,7 @@ In adherence to strict scientific evaluation guidelines:
 
 ## License
 
-This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for complete details.
+This project is licensed under the **MIT License** (in compliance with APCTT Decision D72). See the [LICENSE](LICENSE) file for complete details.
 
 ---
 *ARGUS — Engineered for the 2nd APCTT Hackathon 2026 / Techfest 2026–27.*
