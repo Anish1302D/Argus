@@ -1,4 +1,4 @@
-# Argus — Stage 1 Standalone Submission
+# TRL Debate Engine — Stage 1 Standalone Submission
 
 **Competition:** Techfest 2026–27 | 2nd APCTT Hackathon 2026  
 **Challenge:** AI for Technology Readiness  

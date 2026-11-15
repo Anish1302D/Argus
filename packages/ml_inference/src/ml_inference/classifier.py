@@ -13,8 +13,12 @@ No trained LightGBM model fitted on synthetic data is shipped or used for infere
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
-import lightgbm as lgb
 import numpy as np
+
+try:
+    import lightgbm as lgb
+except ImportError:  # pragma: no cover - optional in APCTT base environment
+    lgb = None
 
 from trl_core.audit import AuditTrailBuilder
 from trl_core.contradiction import ContradictionDetector
@@ -41,13 +45,40 @@ from ml_inference.claim_extractor import StructuredClaimExtractor
 from ml_inference.features import FeatureExtractor
 
 
+class _NumpyOrdinalFallbackRegressor:
+    """Lightweight deterministic fallback regressor when LightGBM is not installed."""
+
+    def __init__(self) -> None:
+        self._weights: Optional[np.ndarray] = None
+        self._bias: float = 1.0
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "_NumpyOrdinalFallbackRegressor":
+        X_arr = np.asarray(X, dtype=np.float64)
+        y_arr = np.asarray(y, dtype=np.float64)
+        ones = np.ones((X_arr.shape[0], 1), dtype=np.float64)
+        X_aug = np.hstack([X_arr, ones])
+        reg = 1e-2 * np.eye(X_aug.shape[1], dtype=np.float64)
+        reg[-1, -1] = 0.0
+        theta = np.linalg.pinv(X_aug.T @ X_aug + reg) @ (X_aug.T @ y_arr)
+        self._weights = theta[:-1]
+        self._bias = float(theta[-1])
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        X_arr = np.asarray(X, dtype=np.float64)
+        if self._weights is None:
+            return np.clip(X_arr[:, 9], 1.0, 9.0)
+        preds = X_arr @ self._weights + self._bias
+        return np.clip(preds, 1.0, 9.0)
+
+
 class TRLOrdinalClassifier:
     """
     Deterministic TRL Adjudicator with optional ML fallback.
     Default mode: Pure deterministic rule-based criteria ladder with implied prerequisites.
     """
 
-    def __init__(self, model: Optional[lgb.LGBMRegressor] = None, enable_ml: bool = False):
+    def __init__(self, model: Optional[Any] = None, enable_ml: bool = False):
         self.feature_extractor = FeatureExtractor()
         self.claim_extractor = StructuredClaimExtractor()
         self.contradiction_detector = ContradictionDetector()
@@ -65,16 +96,19 @@ class TRLOrdinalClassifier:
         Only called when official labelled data is available.
         """
         if self.model is None:
-            self.model = lgb.LGBMRegressor(
-                objective="regression_l1",
-                n_estimators=50,
-                learning_rate=0.1,
-                max_depth=3,
-                num_leaves=7,
-                min_child_samples=1,
-                random_state=42,
-                verbosity=-1
-            )
+            if lgb is not None:
+                self.model = lgb.LGBMRegressor(
+                    objective="regression_l1",
+                    n_estimators=50,
+                    learning_rate=0.1,
+                    max_depth=3,
+                    num_leaves=7,
+                    min_child_samples=1,
+                    random_state=42,
+                    verbosity=-1
+                )
+            else:
+                self.model = _NumpyOrdinalFallbackRegressor()
         y_float = np.asarray(y, dtype=np.float32)
         self.model.fit(X, y_float)
         self.is_fitted = True

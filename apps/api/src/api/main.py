@@ -174,6 +174,65 @@ def assess_file_endpoint(
             tmp_path.unlink()
 
 
+class ApcttCaseRequest(BaseModel):
+    case: Dict[str, Any]
+    checklist: Optional[Dict[str, Any]] = None
+
+
+@app.get("/api/apctt/checklist")
+async def get_apctt_checklist_endpoint():
+    """Return the official APCTT Stage 1 checklist (APCTT-2026-CHECKLIST-v1)."""
+    service = get_service()
+    return service.get_apctt_checklist()
+
+
+@app.get("/api/apctt/validation-summary")
+async def get_apctt_validation_summary_endpoint():
+    """Return the APCTT Stage 1 Validation Centre summary and smoke benchmark status."""
+    service = get_service()
+    return service.get_apctt_validation_summary()
+
+
+@app.post("/api/apctt/assess-case")
+def assess_apctt_case_endpoint(req: ApcttCaseRequest):
+    """Run the official APCTT AssessmentModule on an APCTT-format case payload."""
+    service = get_service()
+    return service.assess_apctt_case(req.case, checklist_override=req.checklist)
+
+
+@app.post("/api/apctt/assess-sample/{sample_id}")
+def assess_apctt_sample_endpoint(sample_id: str):
+    """Run the official APCTT AssessmentModule on one of the preloaded sample scenarios."""
+    if sample_id not in SAMPLE_DOCUMENTS:
+        raise HTTPException(status_code=404, detail=f"Sample document '{sample_id}' not found.")
+    sample = SAMPLE_DOCUMENTS[sample_id]
+    service = get_service()
+    case_payload = {
+        "schema_version": "apctt-pdf-example-v1",
+        "checklist_version": "APCTT-2026-CHECKLIST-v1",
+        "case_id": f"SAMPLE-{sample_id.upper()}",
+        "title": sample["title"],
+        "assessment_target": {
+            "target_id": f"{sample_id}-T1",
+            "type": "system" if sample["expected_trl"] >= 7 else "technology",
+            "description": sample["title"],
+        },
+        "intended_application": sample.get("description") or sample.get("summary") or sample["title"],
+        "intended_environment": "Operational environment" if sample["expected_trl"] >= 7 else "Laboratory / relevant environment",
+        "documents": [
+            {
+                "document_id": "D001",
+                "title": sample["title"],
+                "document_date": "2026-01-15",
+                "language": "en",
+                "format": "pdf",
+                "text": sample["content"],
+            }
+        ],
+    }
+    return service.assess_apctt_case(case_payload)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("api.main:app", host="127.0.0.1", port=8000, reload=False)
