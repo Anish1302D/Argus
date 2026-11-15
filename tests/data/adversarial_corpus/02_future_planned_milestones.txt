@@ -1,0 +1,7 @@
+Integrated Photonic Gyroscope for Spacecraft Navigation
+
+Abstract: Experimental proof-of-concept for an integrated optical ring resonator gyroscope.
+
+Laboratory Testing: Bench-scale experiments were conducted in a laboratory darkroom over 40 hours. Measured parameter sensitivity was 0.05 deg/hr with linear calibration curves.
+
+Future Roadmap: Future work will focus on flight demonstration (TRL 7). An orbital satellite flight test is planned for Q4 2028 aboard a commercial launch vehicle. Environmental chamber testing will be conducted next year.

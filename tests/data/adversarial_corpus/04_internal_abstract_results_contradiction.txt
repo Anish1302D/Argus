@@ -1,0 +1,7 @@
+Hypersonic Thermal Protection System: Flight Qualification Assessment
+
+Abstract: We report on the flight demonstration of an ultra-high temperature ceramic matrix composite.
+
+Arc-Jet Facility Testing: Plasma arc-jet tests delivered 2,150 K surface temperatures for 180 seconds under simulated Mach 7 aerothermal conditions.
+
+Limitations: However, contrary to initial programmatic targets, the system has not yet undergone actual suborbital sounding rocket flight demonstration. Flight tests remain unperformed due to launch range delays.
