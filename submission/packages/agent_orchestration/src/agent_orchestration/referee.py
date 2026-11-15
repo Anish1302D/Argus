@@ -126,7 +126,7 @@ class RefereeAdjudicator:
             )
         else:
             justification = (
-                f"Adjudicated TRL {final_trl} ({final_def.title}). Deterministic adjudication confirms "
+                f"Adjudicated TRL {final_trl} ({final_def.title}). Deterministic rule-based adjudication confirms "
                 f"mandatory criteria satisfied with {len(accepted_evidence_ids)} accepted evidence record(s). "
                 f"Validation environment ({final_def.required_environment}) matches demonstrated milestone scope."
             )
