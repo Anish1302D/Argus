@@ -67,7 +67,7 @@ pythonpath = [
     "packages/agent_orchestration/src",
     "packages/competition_engine/src",
     "apps/api/src",
-    "my_submission",
+    "apctt_submission",
     "apctt-participant-kit-0.5.0-cpu/src",
     "."
 ]

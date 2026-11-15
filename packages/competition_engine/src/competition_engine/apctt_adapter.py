@@ -12,15 +12,34 @@ from __future__ import annotations
 
 import json
 import math
+import random
 import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
+import numpy as np
+
+from agent_orchestration.protocol import ReviewProtocol
 from document_processing.extractor import DocumentExtractor, ExtractedPage
+from ml_inference.claim_extractor import StructuredClaimExtractor
+from ml_inference.modality import ModalityAnalyzer
 from retrieval.engine import BM25Index, RetrievalDocument, is_bare_trl_assertion, normalize_stem, tokenize
+from trl_core.contradiction import ContradictionDetector
+from trl_core.criteria_mapper import CriteriaMapper
+from trl_core.evidence_quality import EvidenceQualityAssessor
+from trl_core.models import (
+    Chunk,
+    Document,
+    EvidenceCategory,
+    EvidenceItem,
+    EvidenceStrength,
+    EvidenceType,
+    ModalityType,
+)
 from trl_core.sanitizer import sanitize_text
+from trl_core.uncertainty import UncertaintyModel
 
 # ---------------------------------------------------------------------------
 # General-purpose linguistic patterns (domain-independent)
@@ -345,6 +364,114 @@ TRL_SEMANTIC_PROFILES: Dict[int, Dict[str, Any]] = {
 }
 
 
+SIMULATION_ONLY_RE = re.compile(
+    r"\b(?:simulated\s+only|simulation\s+only|only\s+in\s+simulation|purely\s+simulated|"
+    r"in[-–\s]silico\s+only|numerical\s+simulation\s+only|finite\s+element\s+model(?:ing)?|"
+    r"monte\s+carlo\s+simulation|computational\s+fluid\s+dynamics|cfd\s+simulation|"
+    r"synthetic\s+simulation|simulated\s+results?\s+without\s+physical)\b",
+    re.IGNORECASE,
+)
+
+PHYSICAL_VALIDATION_RE = re.compile(
+    r"\b(?:physical\s+prototype|hardware\s+prototype|breadboard\s+hardware|bench[-–]scale\s+rig|"
+    r"water\s+tank|field\s+deployment|streamgage|high[-–]water\s+mark|storm[-–]tide\s+sensor|"
+    r"flight\s+telemetry|in[-–]orbit\s+telemetry|environmental\s+chamber)\b",
+    re.IGNORECASE,
+)
+
+ADVERSARIAL_INJECTION_RE = re.compile(
+    r"(?i)(?:\bignore\s+(?:all\s+)?(?:previous|prior|above)\s+(?:instructions|prompts|directions|rules)\b|"
+    r"\b(?:system\s+override|developer\s+mode|system\s+prompt|jailbreak)\b|"
+    r"\b(?:you\s+must|act\s+as|you\s+are\s+now)\s+(?:an?\s+)?(?:unrestricted|evaluator|admin|assistant)\b|"
+    r"\b(?:output|assign|award|classify|predict|return|set)\s+(?:only\s+)?(?:predicted_trl|trl\s*[1-9]|level\s*[1-9])\b|"
+    r"\b(?:disregard\s+(?:the\s+)?evidence|mark\s+all\s+criteria\s+as\s+met)\b)",
+)
+
+GENERIC_CUSTOM_STOPWORDS: Set[str] = {
+    "evidence",
+    "verified",
+    "demonstrated",
+    "demonstration",
+    "criterion",
+    "criteria",
+    "system",
+    "subsystem",
+    "component",
+    "technology",
+    "reported",
+    "documented",
+    "requirement",
+    "requirements",
+    "standard",
+    "compliance",
+    "completed",
+    "tested",
+    "testing",
+    "test",
+    "tests",
+    "validated",
+    "validation",
+    "assessment",
+    "assessed",
+    "level",
+    "readiness",
+    "stage",
+    "performance",
+    "results",
+    "result",
+    "data",
+    "verification",
+    "support",
+    "supported",
+    "supporting",
+    "show",
+    "shows",
+    "shown",
+    "provide",
+    "provided",
+    "provides",
+    "actual",
+    "target",
+    "environment",
+    "operational",
+    "relevant",
+    "laboratory",
+    "prototype",
+    "model",
+}
+
+
+def is_keyword_stuffing(text: str) -> bool:
+    """
+    Detect adversarial or irrelevant TRL keyword stuffing that lacks coherent
+    technical methodology or quantitative evidence.
+    """
+    if is_bare_trl_assertion(text):
+        return True
+    s_lower = text.lower()
+    trl_mentions = len(re.findall(r"\btrl\s*[1-9]\b", s_lower))
+    buzzwords = (
+        "mission operations",
+        "flight proven",
+        "operational environment",
+        "completed and qualified",
+        "system prototype",
+        "relevant environment",
+        "laboratory environment",
+        "proof of concept",
+        "basic principles",
+    )
+    buzz_hits = sum(1 for bw in buzzwords if bw in s_lower) + trl_mentions
+    if buzz_hits >= 3 and not QUANTITATIVE_METRIC_RE.search(text):
+        tokens = re.findall(r"[a-z0-9]+", s_lower)
+        if not tokens:
+            return True
+        diversity = len(set(tokens)) / len(tokens)
+        if diversity < 0.65 or trl_mentions >= 2 or buzz_hits >= 4:
+            return True
+    return False
+
+
 @dataclass
 class CriterionProfile:
     """Dynamically inferred profile for a single checklist criterion."""
@@ -356,6 +483,7 @@ class CriterionProfile:
     query_text: str = ""
     keywords: List[str] = field(default_factory=list)
     custom_phrases: List[str] = field(default_factory=list)
+    distinctive_keywords: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -367,10 +495,11 @@ class CandidateSpan:
     supporting_span: str
     full_sentence: str
     document_date: Optional[str] = None
-    modality: str = "COMPLETED"  # COMPLETED, PLANNED, HYPOTHETICAL, NEGATED, FAILED, BACKGROUND
+    modality: str = "COMPLETED"  # COMPLETED, PLANNED, HYPOTHETICAL, NEGATED, FAILED, SIMULATED, BACKGROUND
     is_negated: bool = False
     is_failed: bool = False
     is_planned: bool = False
+    is_simulated_only: bool = False
     is_quantitative: bool = False
     has_requirement_comparison: bool = False
     has_environment_detail: bool = False
@@ -535,6 +664,9 @@ def infer_criterion_profile(
 
     # 3. Fallback: custom criterion evaluated dynamically from its own description & phrases
     desc_tokens = tokenize(description, include_stems=False)
+    distinctive = [
+        t for t in desc_tokens if t.lower() not in GENERIC_CUSTOM_STOPWORDS and len(t) >= 3
+    ]
     return CriterionProfile(
         criterion_id=criterion_id,
         description=description,
@@ -543,25 +675,44 @@ def infer_criterion_profile(
         query_text=f"{description} {' '.join(phrases)}".strip(),
         keywords=desc_tokens + [p.lower() for p in phrases],
         custom_phrases=phrases,
+        distinctive_keywords=distinctive,
     )
 
 
-def analyze_span_modality(text: str) -> Tuple[str, bool, bool, bool]:
+_MODALITY_ANALYZER = ModalityAnalyzer()
+
+
+def analyze_span_modality(text: str) -> Tuple[str, bool, bool, bool, bool]:
     """
-    Determine (modality, is_negated, is_failed, is_planned) for a candidate sentence/span.
+    Determine (modality, is_negated, is_failed, is_planned, is_simulated_only)
+    for a candidate sentence/span using both pattern rules and Argus's ModalityAnalyzer.
     """
     for pat in NEGATION_PATTERNS:
         if pat.search(text):
-            return ("NEGATED", True, False, False)
+            return ("NEGATED", True, False, False, False)
     for pat in FAILURE_PATTERNS:
         if pat.search(text):
-            return ("FAILED", False, True, False)
+            return ("FAILED", False, True, False, False)
     for pat in PLANNED_OR_HYPOTHETICAL_PATTERNS:
         if pat.search(text):
-            return ("PLANNED", False, False, True)
+            return ("PLANNED", False, False, True, False)
+
+    mod_type, temp_status = _MODALITY_ANALYZER.analyze_claim_modality(text, "")
+    if mod_type == ModalityType.NEGATED:
+        return ("NEGATED", True, False, False, False)
+    if mod_type in (ModalityType.PLANNED, ModalityType.HYPOTHETICAL):
+        return ("PLANNED", False, False, True, False)
+
+    is_sim_only = bool(
+        (mod_type == ModalityType.SIMULATED or SIMULATION_ONLY_RE.search(text))
+        and not PHYSICAL_VALIDATION_RE.search(text)
+    )
+    if is_sim_only:
+        return ("SIMULATED", False, False, False, True)
+
     if COMPLETED_ACTION_RE.search(text):
-        return ("COMPLETED", False, False, False)
-    return ("BACKGROUND", False, False, False)
+        return ("COMPLETED", False, False, False, False)
+    return ("BACKGROUND", False, False, False, False)
 
 
 def extract_verbatim_span_from_page(raw_segment: str, page_text: str, max_len: int = 220) -> str:
@@ -612,8 +763,8 @@ def extract_verbatim_span_from_page(raw_segment: str, page_text: str, max_len: i
 
 def extract_candidate_spans(pages: Sequence[ExtractedPage]) -> List[CandidateSpan]:
     """
-    Segment extracted pages into candidate evidence spans with verbatim page substrings
-    and modality/quality annotations.
+    Segment extracted pages into candidate evidence spans with verbatim page substrings,
+    sanitizing untrusted text against hidden Unicode and prompt injection.
     """
     sentence_split_re = re.compile(r"(?<=[.!?])\s+|\n{2,}")
     candidates: List[CandidateSpan] = []
@@ -635,15 +786,28 @@ def extract_candidate_spans(pages: Sequence[ExtractedPage]) -> List[CandidateSpa
             if is_toc_page and ("..." in raw_stripped or ". . ." in raw_stripped):
                 continue
 
-            norm_sentence = " ".join(raw_stripped.split())
-            if is_bare_trl_assertion(norm_sentence):
+            # Sanitize untrusted text: strip zero-width/hidden Unicode and detect prompt injections
+            sanitized = sanitize_text(raw_stripped)
+            norm_sentence = " ".join(sanitized.cleaned_text.split())
+            if not norm_sentence or len(norm_sentence) < 12:
+                continue
+            if not sanitized.is_safe or ADVERSARIAL_INJECTION_RE.search(norm_sentence):
+                continue
+            if is_keyword_stuffing(norm_sentence):
                 continue
 
             verbatim = extract_verbatim_span_from_page(raw_stripped, page_text, max_len=220)
-            if not verbatim or is_bare_trl_assertion(verbatim):
+            if not verbatim:
+                continue
+            verbatim_sanitized = sanitize_text(verbatim)
+            if (
+                not verbatim_sanitized.is_safe
+                or ADVERSARIAL_INJECTION_RE.search(verbatim_sanitized.cleaned_text)
+                or is_keyword_stuffing(verbatim_sanitized.cleaned_text)
+            ):
                 continue
 
-            modality, is_negated, is_failed, is_planned = analyze_span_modality(norm_sentence)
+            modality, is_negated, is_failed, is_planned, is_sim_only = analyze_span_modality(norm_sentence)
             is_quant = bool(QUANTITATIVE_METRIC_RE.search(norm_sentence))
             has_req = bool(REQUIREMENT_COMPARISON_RE.search(norm_sentence))
             has_env = bool(ENVIRONMENT_INDICATOR_RE.search(norm_sentence))
@@ -665,6 +829,9 @@ def extract_candidate_spans(pages: Sequence[ExtractedPage]) -> List[CandidateSpa
                     else:
                         max_hint = max(max_hint, lvl)
 
+            if is_sim_only and max_hint > 3:
+                max_hint = 3
+
             candidates.append(
                 CandidateSpan(
                     document_id=p.document_id,
@@ -676,6 +843,7 @@ def extract_candidate_spans(pages: Sequence[ExtractedPage]) -> List[CandidateSpa
                     is_negated=is_negated,
                     is_failed=is_failed,
                     is_planned=is_planned,
+                    is_simulated_only=is_sim_only,
                     is_quantitative=is_quant,
                     has_requirement_comparison=has_req,
                     has_environment_detail=has_env,
@@ -859,18 +1027,20 @@ def determine_case_maturity_and_conflicts(
     target_lower = target_profile.target_text.lower()
     meta_lower = f"{title_lower} {target_lower} {env_lower} {target_profile.application_text.lower()}"
 
-    # Count substantive evidence across the corpus
+    # Count substantive evidence across the corpus (excluding simulation-only claims from hardware/ops counts)
     quant_count = sum(1 for c in completed_spans if c.is_quantitative)
     req_comp_count = sum(1 for c in completed_spans if c.is_quantitative and c.has_requirement_comparison)
     calib_count = sum(
         1
         for c in completed_spans
-        if re.search(r"\b(calibrat\w+|validat\w+|nash[-–]sutcliffe|rmse|pbias|r2)\b", c.full_sentence, re.I)
+        if not c.is_simulated_only
+        and re.search(r"\b(calibrat\w+|validat\w+|nash[-–]sutcliffe|rmse|pbias|r2)\b", c.full_sentence, re.I)
     )
     operational_count = sum(
         1
         for c in completed_spans
-        if re.search(
+        if not c.is_simulated_only
+        and re.search(
             r"\b(operational\s+(?:environment|deploy\w*|demonstrat\w*|forecast\w*|system|monitor\w*|trial|test\w*|use)|"
             r"field\s+(?:deploy\w*|demonstrat\w*|trial|campaign|test\w*)|"
             r"flood[-–]inundation\s+map\w*|high[-–]water\s+mark\w*|"
@@ -883,7 +1053,8 @@ def determine_case_maturity_and_conflicts(
     mission_ops_count = sum(
         1
         for c in completed_spans
-        if re.search(
+        if not c.is_simulated_only
+        and re.search(
             r"\b(mission\s+operations|proven\s+in\s+successful|monitoring\s+storm\s+tide|"
             r"hurricane\s+(?:sandy|irma|maria|harvey)|storm[-–]tide\s+sensor\s+deploy\w*|"
             r"flight[-–]proven\s+mission)\b",
@@ -894,7 +1065,8 @@ def determine_case_maturity_and_conflicts(
     qualified_release_count = sum(
         1
         for c in completed_spans
-        if re.search(
+        if not c.is_simulated_only
+        and re.search(
             r"\b(completed\s+and\s+qualified|qualification\s+test\w*|version\s+\d+\.\d+\s+user\s+guide|"
             r"flight\s+qualified|formal\s+qualification)\b",
             c.full_sentence,
@@ -904,7 +1076,8 @@ def determine_case_maturity_and_conflicts(
     lab_or_coupled_sw_count = sum(
         1
         for c in completed_spans
-        if re.search(
+        if not c.is_simulated_only
+        and re.search(
             r"\b(laboratory|breadboard|bench[-–]scale|water\s+tank|coupled\s+simulation|"
             r"installation\s+package|source\s+code|example\s+dataset\w*|p2s)\b",
             c.full_sentence,
@@ -914,15 +1087,24 @@ def determine_case_maturity_and_conflicts(
 
     # Check explicit global ceilings in text (e.g. "only a lab test was completed", "has not yet undergone flight")
     explicit_ceiling = 9
+    if all(c.is_simulated_only for c in completed_spans) or (
+        any(c.is_simulated_only for c in completed_spans)
+        and len(completed_spans) <= 6
+        and not PHYSICAL_VALIDATION_RE.search(full_corpus_text)
+    ):
+        explicit_ceiling = min(explicit_ceiling, 3)
+
     for c in negated_or_failed:
         s_low = c.full_sentence.lower()
-        if any(w in s_low for w in ("no laboratory", "no experiment", "no prototype", "no simulation")):
+        if any(w in s_low for w in ("no laboratory", "no experiment", "no prototype", "no simulation", "no physical")):
             if len(completed_spans) <= 4:
                 explicit_ceiling = min(explicit_ceiling, 2)
         if any(w in s_low for w in ("not yet undergone", "flight demonstration was not", "not tested in operational")):
             explicit_ceiling = min(explicit_ceiling, 6)
         if any(w in s_low for w in ("not tested in a relevant environment", "only a lab test", "only laboratory")):
             explicit_ceiling = min(explicit_ceiling, 4)
+        if any(w in s_low for w in ("only in simulation", "simulated only", "no hardware", "without physical testing")):
+            explicit_ceiling = min(explicit_ceiling, 3)
 
     # Determine base TRL from evidence progression
     if (
@@ -1009,7 +1191,6 @@ def neg_Span_is_global(sentence: str) -> bool:
     )
 
 
-
 def rank_spans_for_criterion(
     profile: CriterionProfile,
     candidates: Sequence[CandidateSpan],
@@ -1031,6 +1212,8 @@ def rank_spans_for_criterion(
 
     kw_set = {k.lower() for k in profile.keywords if len(k) >= 3}
     kw_stems = {normalize_stem(k) for k in kw_set if len(normalize_stem(k)) >= 3}
+    distinctive_kw_set = {k.lower() for k in profile.distinctive_keywords if len(k) >= 3}
+    distinctive_stems = {normalize_stem(k) for k in distinctive_kw_set if len(normalize_stem(k)) >= 3}
 
     for idx, cand in enumerate(candidates):
         s_lower = cand.full_sentence.lower()
@@ -1087,17 +1270,27 @@ def rank_spans_for_criterion(
 
         elif profile.kind == "trl_milestone" and profile.target_trl is not None:
             lvl = profile.target_trl
-            if cand.max_trl_hint == lvl:
-                score += 4.5
-            elif cand.max_trl_hint > lvl and lvl <= 6:
-                score += 2.0
-            if cand.modality == "COMPLETED":
-                score += 1.5
-            if lvl >= 4 and cand.is_quantitative:
-                score += 1.2
+            if cand.is_simulated_only and lvl >= 4:
+                score *= 0.1
+            else:
+                if cand.max_trl_hint == lvl:
+                    score += 4.5
+                elif cand.max_trl_hint > lvl and lvl <= 6:
+                    score += 2.0
+                if cand.modality == "COMPLETED":
+                    score += 1.5
+                if lvl >= 4 and cand.is_quantitative:
+                    score += 1.2
 
         else:
-            # Custom criterion
+            # Custom criterion: require explicit match with distinctive criterion terms or custom phrases
+            # so unknown/unsupported criteria honestly return "insufficient evidence"
+            distinctive_hits = sum(1 for k in distinctive_kw_set if k in s_lower) + sum(
+                0.5 for st in distinctive_stems if st in s_tokens
+            )
+            min_required = min(2.0, max(1.0, len(distinctive_kw_set) * 0.6)) if distinctive_kw_set else 2.5
+            if phrase_hits == 0 and distinctive_hits < min_required:
+                continue
             if cand.modality == "COMPLETED":
                 score += 1.5
 
@@ -1451,13 +1644,120 @@ def verify_and_sanitize_result(
     return result
 
 
+def run_argus_core_orchestration(
+    pages: Sequence[ExtractedPage],
+    candidate_trl: int,
+    claim_extractor: StructuredClaimExtractor,
+    quality_assessor: EvidenceQualityAssessor,
+    contradiction_detector: ContradictionDetector,
+    criteria_mapper: CriteriaMapper,
+    review_protocol: ReviewProtocol,
+    uncertainty_model: UncertaintyModel,
+) -> Dict[str, Any]:
+    """
+    Execute the existing Argus core reasoning and multi-agent review pipeline
+    (StructuredClaimExtractor -> EvidenceQualityAssessor -> ContradictionDetector ->
+    CriteriaMapper -> Optimist/Skeptic/Referee ReviewProtocol -> UncertaintyModel)
+    over the extracted document pages.
+    """
+    chunks: List[Chunk] = []
+    offset = 0
+    for idx, p in enumerate(pages[:40]):  # Bound to top 40 pages for deterministic <2s latency
+        clean_text = sanitize_text(p.text or "").cleaned_text
+        if not clean_text.strip():
+            continue
+        chunks.append(
+            Chunk(
+                id=f"CHK-{p.document_id[:6]}-P{p.page:03d}-{idx:03d}",
+                document_id=p.document_id,
+                text=clean_text,
+                section_name=f"Page {p.page}",
+                page_number=p.page,
+                char_offset_start=offset,
+                char_offset_end=offset + len(clean_text),
+            )
+        )
+        offset += len(clean_text) + 1
+
+    argus_doc = Document(
+        id=pages[0].document_id if pages else "DOC-001",
+        name=pages[0].title or "Technical Document" if pages else "Technical Document",
+        raw_content="\n".join(c.text for c in chunks),
+        chunks=chunks,
+    )
+
+    claims = claim_extractor.extract_document_claims(argus_doc)
+    evidence_items: List[EvidenceItem] = []
+    for i, cl in enumerate(claims):
+        strength = quality_assessor.assess_claim_quality(cl)
+        conf = quality_assessor.score_extraction_confidence(cl, strength)
+        page_num = 1
+        if cl.section_name and cl.section_name.startswith("Page "):
+            try:
+                page_num = int(cl.section_name.split("Page ")[1])
+            except ValueError:
+                page_num = 1
+        evidence_items.append(
+            EvidenceItem(
+                id=f"EV-{i+1:03d}",
+                document_id=cl.document_id,
+                evidence_text=cl.text,
+                page_number=page_num,
+                section_name=cl.section_name,
+                category=EvidenceCategory.EXPERIMENT,
+                evidence_type=cl.evidence_type,
+                strength=strength,
+                modality=cl.modality,
+                temporal_status=cl.temporal_status,
+                validation_environment=cl.validation_environment,
+                measurements=cl.measurements,
+                target_trl=cl.candidate_trl,
+                confidence=conf,
+                reasoning=f"Extracted {cl.achievement_category} claim ({cl.modality.value}).",
+            )
+        )
+
+    contradictions = contradiction_detector.detect_contradictions(claims)
+    eval_trl = max(1, min(9, candidate_trl if candidate_trl >= 1 else 1))
+    criteria_mappings = criteria_mapper.map_evidence_to_criteria(
+        target_trl=eval_trl,
+        evidence_items=evidence_items,
+        contradictions=contradictions,
+    )
+    transcript, agent_assessments, ref_trl, ref_just, _, adj_ledger = review_protocol.run_debate(
+        candidate_trl=eval_trl,
+        evidence_items=evidence_items,
+        claims=claims,
+        contradictions=contradictions,
+        criteria_mappings=criteria_mappings,
+    )
+    uncertainty_profile = uncertainty_model.compute_profile(
+        target_trl=ref_trl,
+        evidence_items=evidence_items,
+        contradictions=contradictions,
+    )
+
+    return {
+        "claims_count": len(claims),
+        "measurements_count": sum(len(c.measurements) for c in claims),
+        "contradictions_count": len(contradictions),
+        "optimist_trl": agent_assessments["optimist"].initial_trl,
+        "skeptic_trl": agent_assessments["skeptic"].initial_trl,
+        "referee_trl": ref_trl,
+        "referee_justification": ref_just,
+        "composite_certainty": uncertainty_profile.composite_certainty,
+        "debate_messages_count": len(transcript),
+        "adjudication_ledger": adj_ledger,
+    }
+
+
 class AssessmentModule:
     """
     Official APCTT Participant Kit AssessmentModule entrypoint (`participant_module.adapter:AssessmentModule`).
 
     Connects the APCTT worker execution protocol to ARGUS's domain-independent
-    document processing, hybrid retrieval, modality/negation analysis, and
-    criterion-grounded TRL adjudication engine.
+    document processing, hybrid retrieval, modality/negation analysis, multi-agent
+    Optimist/Skeptic/Referee orchestration, and criterion-grounded TRL adjudication engine.
     """
 
     def __init__(self) -> None:
@@ -1467,13 +1767,21 @@ class AssessmentModule:
         self.criteria: List[Dict[str, str]] = []
         self.criterion_profiles: List[CriterionProfile] = []
         self.rules: Dict[str, Any] = {}
+        self.seed: int = 42
         self.extractor = DocumentExtractor()
+        self.claim_extractor = StructuredClaimExtractor()
+        self.quality_assessor = EvidenceQualityAssessor()
+        self.contradiction_detector = ContradictionDetector()
+        self.criteria_mapper = CriteriaMapper()
+        self.review_protocol = ReviewProtocol()
+        self.uncertainty_model = UncertaintyModel()
         self.last_case_id: Optional[str] = None
         self._case_cache: Dict[str, Any] = {}
 
     def load(self, config: Mapping[str, Any], asset_root: Path) -> None:
         """
-        Called once when the worker starts. Reads the dynamic checklist and optional assets.
+        Called once when the worker starts. Reads the dynamic checklist, seeds random generators,
+        and loads optional local assets.
         """
         if not isinstance(config, Mapping):
             raise ValueError("config must be a mapping")
@@ -1491,7 +1799,24 @@ class AssessmentModule:
         self.asset_root = Path(asset_root)
         self.checklist_version = version
 
+        compute_cfg = config.get("compute")
+        raw_seed = (
+            compute_cfg.get("seed")
+            if isinstance(compute_cfg, Mapping) and compute_cfg.get("seed") is not None
+            else config.get("seed", 42)
+        )
+        try:
+            self.seed = int(raw_seed)
+        except (TypeError, ValueError):
+            self.seed = 42
+        random.seed(self.seed)
+        np.random.seed(self.seed)
+
         settings = config.get("settings")
+        if not isinstance(settings, Mapping):
+            mod_cfg = config.get("module")
+            if isinstance(mod_cfg, Mapping):
+                settings = mod_cfg.get("settings")
         settings_map = dict(settings) if isinstance(settings, Mapping) else {}
         rules_data: Dict[str, Any] = {}
         rules_rel = settings_map.get("rules_path")
@@ -1538,6 +1863,14 @@ class AssessmentModule:
         if self.checklist_version is None or not self.criterion_profiles:
             raise RuntimeError("AssessmentModule.load() must be called before assess()")
 
+        # Seed deterministic RNGs from context.seed or module seed
+        ctx_seed = getattr(context, "seed", None) if context is not None else None
+        active_seed = self.seed
+        if isinstance(ctx_seed, int) and not isinstance(ctx_seed, bool):
+            active_seed = ctx_seed
+        random.seed(active_seed)
+        np.random.seed(active_seed)
+
         self.last_case_id = str(case.get("case_id") or "")
         criterion_ids = [c["criterion_id"] for c in self.criteria]
 
@@ -1573,11 +1906,15 @@ class AssessmentModule:
             doc_date = doc.get("document_date")
             doc_title = doc.get("title")
 
-            if not doc_id or not doc_path_str:
+            if not doc_id or not doc_path_str or not isinstance(doc_path_str, str):
                 return self._build_failed_result(case, criterion_ids, "DOCUMENT_PATH_MISSING")
 
-            pdf_path = Path(str(doc_path_str))
-            if not pdf_path.is_file():
+            # Security validation on file paths (reject null bytes, traversal segments, non-PDFs, symlinks)
+            if "\x00" in doc_path_str or ".." in Path(doc_path_str).parts or not doc_path_str.lower().endswith(".pdf"):
+                return self._build_failed_result(case, criterion_ids, "DOCUMENT_PATH_INVALID")
+
+            pdf_path = Path(doc_path_str)
+            if pdf_path.is_symlink() or not pdf_path.is_file():
                 return self._build_failed_result(case, criterion_ids, "DOCUMENT_FILE_NOT_FOUND")
 
             try:
@@ -1615,12 +1952,28 @@ class AssessmentModule:
             for i, c in enumerate(candidates)
         ]
         bm25_index = BM25Index().build(retrieval_docs)
-        self._case_cache = {"candidate_count": len(candidates), "page_count": len(all_pages)}
 
         target_profile = build_case_target_profile(case)
         ceiling_trl, has_conflict, is_out_of_scope, is_insufficient, notes = (
             determine_case_maturity_and_conflicts(all_pages, candidates, target_profile)
         )
+
+        # Run the Argus core multi-agent review and claim/contradiction pipeline
+        argus_audit = run_argus_core_orchestration(
+            pages=all_pages,
+            candidate_trl=ceiling_trl,
+            claim_extractor=self.claim_extractor,
+            quality_assessor=self.quality_assessor,
+            contradiction_detector=self.contradiction_detector,
+            criteria_mapper=self.criteria_mapper,
+            review_protocol=self.review_protocol,
+            uncertainty_model=self.uncertainty_model,
+        )
+        self._case_cache = {
+            "candidate_count": len(candidates),
+            "page_count": len(all_pages),
+            "argus_audit": argus_audit,
+        }
 
         criterion_status: Dict[str, str] = {}
         evidence_reference: Dict[str, List[Dict[str, Any]]] = {}
@@ -1684,7 +2037,9 @@ class AssessmentModule:
 
         if assessment_status == "completed" and predicted_trl is not None:
             ratio_met = met_count / max(len(self.criterion_profiles), 1)
-            conf = round(min(0.95, max(0.55, 0.55 + 0.35 * ratio_met)), 2)
+            base_conf = 0.55 + 0.35 * ratio_met
+            blended_conf = 0.7 * base_conf + 0.3 * float(argus_audit["composite_certainty"])
+            conf = round(min(0.95, max(0.55, blended_conf)), 2)
             lower_trl = max(1, predicted_trl - 1 if ratio_met < 0.75 else predicted_trl)
             upper_trl = min(9, predicted_trl + 1 if ratio_met < 0.85 and predicted_trl < 9 else predicted_trl)
             result["confidence"] = conf
@@ -1697,6 +2052,9 @@ class AssessmentModule:
                 f"Assessed at TRL {predicted_trl} based on {met_count}/{len(self.criterion_profiles)} "
                 f"satisfied checklist criteria across {len(raw_docs)} document(s) ({len(all_pages)} pages). "
                 + " ".join(notes)
+                + f" Argus Referee Audit: {argus_audit['claims_count']} structured claim(s), "
+                f"{argus_audit['measurements_count']} quantitative measurement(s), "
+                f"composite_certainty={argus_audit['composite_certainty']:.2f}."
             )
             result["criterion_rationale"] = criterion_rationale
         elif assessment_status == "abstained":

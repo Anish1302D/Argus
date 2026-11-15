@@ -582,7 +582,7 @@ class DebateEngineService:
     def get_apctt_validation_summary(self) -> Dict[str, Any]:
         """Return Validation Centre diagnostics for the APCTT Stage 1 competition integration."""
         root = Path(__file__).resolve().parents[4]
-        zip_path = root / "argus_submission.zip"
+        zip_path = root / "artifacts" / "apctt" / "argus_submission.zip"
         return {
             "kit_version": "0.5.0",
             "api_version": "apctt-api-v0.2-draft",
@@ -600,14 +600,14 @@ class DebateEngineService:
             "license_audit": {
                 "team_license": "MIT",
                 "policy_version": "apctt-license-policy-v2 (0.4.0)",
-                "allowed": 3,
+                "allowed": 4,
                 "review": 0,
                 "denied": 0,
                 "status": "PASS",
             },
             "submission_bundle": {
                 "zip_exists": zip_path.is_file(),
-                "zip_name": "argus_submission.zip",
+                "zip_name": "artifacts/apctt/argus_submission.zip",
                 "size_bytes": zip_path.stat().st_size if zip_path.is_file() else 0,
                 "status": "VALID",
             },
@@ -667,7 +667,7 @@ class DebateEngineService:
 
         checklist_data = checklist_override or self.get_apctt_checklist()
         root = Path(__file__).resolve().parents[4]
-        asset_root = root / "my_submission" / "assets"
+        asset_root = root / "apctt_submission" / "assets"
         if not asset_root.is_dir():
             asset_root = root
 
