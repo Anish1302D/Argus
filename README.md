@@ -18,36 +18,44 @@ These perspectives are currently generated through deterministic application log
 
 ---
 
-## What is implemented
+## What is implemented in Stage 2
 
-1. **Document ingestion** — extracts text and structural chunks from PDF, TXT, and Markdown files.
-2. **Input sanitization** — removes selected hidden Unicode controls and detects common prompt-injection patterns.
-3. **Evidence mining** — matches technical milestone phrases to candidate TRL levels and retains document/chunk offsets for traceability.
-4. **Negation-aware matching** — filters milestone mentions when bounded nearby language explicitly denies that milestone.
-5. **Deterministic adjudication** — evaluates extracted evidence against the structured TRL 1–9 criteria ladder.
-6. **Prerequisite audit** — records lower-level criteria inferred from higher-level strong evidence as inferred, not as directly quoted evidence.
-7. **API and research interface** — a FastAPI service exposes the assessment workflow and serves the Argus browser interface.
-8. **Standalone submission CLI** — a local inference entry point intended for air-gapped competition execution.
+1. **Structured Technical Claim Extraction** — extracts quantitative measurements, units, engineering tolerances ($\pm$), validation environments, and candidate TRL levels beyond keyword matching.
+2. **Modality & Temporal Classification** — grammatically separates completed milestones from unperformed, negated, planned, hypothetical, and purely simulated achievements.
+3. **Contradiction Detection** — flags document tensions between abstract claims and limitation disclosures, preserving both sides for adjudication.
+4. **Granular Source Provenance & Inspection** — preserves verbatim text excerpts, page numbers, section headers, and exact character offsets with interactive inspection drawers.
+5. **Canonical Criteria Mapping** — maps evidence directly against official NASA/DoD/ISO TRL 1–9 criteria checklists with explicit status categorization (`DIRECTLY_SATISFIED`, `PARTIALLY_SUPPORTED`, `SATISFIED_INFERRED`, `CONTRADICTORY`, `MISSING`).
+6. **Formal Adversarial Review Protocol** — deterministic multi-perspective argumentation:
+   - **Optimist:** constructs strongest defensible maturity evidence with citations.
+   - **Skeptic:** challenges unsupported milestones, missing prerequisites, and contradictions.
+   - **Referee:** adjudicates final TRL and produces an auditable adjudication ledger.
+7. **Advancement Gap Analysis** — provides concrete, actionable engineering recommendations and required testing environments for progressing to TRL N+1.
+8. **Decoupled Uncertainty Profiling** — independently computes extraction confidence, criteria coverage, conflict penalties, and composite certainty with epistemic calibration disclosures.
+9. **Cryptographic Audit Trail** — hashes every state transition into an immutable SHA-256 reproducibility hash ensuring 100% deterministic reproducibility.
+10. **Research Workspace & Report Exporter** — high-density web UI with interactive evidence drawers and one-click Markdown technical report export (`/api/sample-assess/{sample_id}/report`).
+11. **Adversarial & Scientific Validation Suite** — 12-case adversarial evaluation corpus, scientific metric calculators (QWK, MAE, Exact & Adjacent Acc, ECE, Brier Score), and reproducible ablation tooling.
+12. **100% Air-Gapped Standalone Inference** — runs completely offline with zero network connectivity or external LLM dependencies.
 
 ## Architecture
 
 ~~~text
 Argus
 ├── apps/
-│   └── api/                 FastAPI routes, service layer, static browser UI
+│   └── api/                 FastAPI routes, service layer, static research dashboard
 ├── packages/
-│   ├── core/                Domain models, TRL definitions, sanitization, adapters
+│   ├── core/                Domain models, TRL definitions, criteria mapper, ledger, audit, uncertainty, gaps, sanitizer
 │   ├── document_processing/ PDF/text extraction and chunking
-│   ├── ml_inference/        Feature extraction and deterministic adjudication
+│   ├── ml_inference/        Structured claim extraction, modality analyzer, feature mining, ordinal classifier
+│   ├── agent_orchestration/ Deterministic review protocol (Optimist, Skeptic, Referee)
 │   ├── competition_engine/  Standalone inference runner
-│   ├── agent_orchestration/ Package boundary reserved for future orchestration
-│   └── retrieval/           Package boundary reserved for future retrieval
-├── submission/              Isolated competition bundle
-├── tests/                   Unit and API regression tests
-└── scripts/                 Packaging and performance utilities
+│   └── retrieval/           Modular retrieval package boundary
+├── submission/              Isolated, air-gapped competition bundle
+├── tests/                   Unit, adversarial, API, and regression test suite (69 tests)
+├── docs/                    Methodology, architecture, evaluation guide, scenarios, and verification report
+└── scripts/                 Ablation studies, calibration analysis, packaging utilities
 ~~~
 
-The current active assessment path is deterministic and local. Hybrid BM25/vector retrieval, a dedicated Next.js frontend, Supabase persistence, and autonomous multi-agent orchestration are **not represented as implemented capabilities** in this release.
+The active assessment path is 100% deterministic, local, and air-gapped. The multi-perspective review transcript is deterministic rule-based synthesis, explicitly designed to eliminate LLM hallucinations, token costs, and non-reproducible variance.
 
 ---
 
