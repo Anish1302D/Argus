@@ -1,0 +1,95 @@
+{
+  "methodology_version": "argus-apctt-stage1-v1.0",
+  "description": "Domain-independent phrase anchors supplementing dynamic checklist profiling.",
+  "criteria": {
+    "APCTT-C01": {
+      "phrases": [
+        "basic principles",
+        "governing equations",
+        "theoretical formulation"
+      ]
+    },
+    "APCTT-C02": {
+      "phrases": [
+        "technology concept",
+        "intended application",
+        "conceptual framework"
+      ]
+    },
+    "APCTT-C03": {
+      "phrases": [
+        "proof of concept",
+        "feasibility study",
+        "analytical verification"
+      ]
+    },
+    "APCTT-C04": {
+      "phrases": [
+        "laboratory test",
+        "laboratory environment",
+        "breadboard",
+        "coupled simulation"
+      ]
+    },
+    "APCTT-C05": {
+      "phrases": [
+        "relevant environment",
+        "representative conditions",
+        "field observations"
+      ]
+    },
+    "APCTT-C06": {
+      "phrases": [
+        "demonstrated in a relevant environment",
+        "calibrated model",
+        "prototype demonstration"
+      ]
+    },
+    "APCTT-C07": {
+      "phrases": [
+        "operational environment",
+        "field deployment",
+        "flood-inundation map library",
+        "streamgage"
+      ]
+    },
+    "APCTT-C08": {
+      "phrases": [
+        "completed and qualified",
+        "qualification testing",
+        "user guide"
+      ]
+    },
+    "APCTT-C09": {
+      "phrases": [
+        "mission operations",
+        "proven in successful",
+        "monitoring storm tide"
+      ]
+    },
+    "APCTT-C10": {
+      "phrases": [
+        "quantified results",
+        "acceptance criteria",
+        "statistically satisfactory",
+        "Nash-Sutcliffe",
+        "RMSE"
+      ]
+    },
+    "APCTT-C11": {
+      "phrases": [
+        "test conditions",
+        "study area",
+        "model configuration",
+        "boundary conditions"
+      ]
+    },
+    "APCTT-C12": {
+      "phrases": [
+        "assessment target",
+        "evaluated system",
+        "coupled model"
+      ]
+    }
+  }
+}
