@@ -14,6 +14,25 @@
 
 ---
 
+## Table of Contents
+- [About ARGUS](#about-argus)
+  - [Overview & Mission](#overview--mission)
+  - [The Problem: Why Existing Approaches Fail](#the-problem-why-existing-approaches-fail)
+  - [The ARGUS Solution](#the-argus-solution)
+- [Key Capabilities & Innovations](#key-capabilities--innovations)
+- [Canonical TRL 1–9 Framework](#canonical-trl-19-framework-operationalization)
+- [System Architecture](#system-architecture)
+- [Quickstart & Installation](#quickstart--installation)
+- [Running the Web Application](#running-the-web-application)
+- [Releases & Versioning](#releases--versioning)
+- [Packages & Modular Architecture](#packages--modular-architecture)
+- [Running the Standalone Air-Gapped CLI](#running-the-standalone-air-gapped-cli)
+- [Scientific Evaluation & Benchmark Results](#scientific-evaluation--benchmark-results)
+- [Methodological Integrity & Epistemic Disclosures](#methodological-integrity--epistemic-disclosures)
+- [License](#license)
+
+---
+
 ## About ARGUS
 
 ### Overview & Mission
@@ -196,6 +215,46 @@ Open your browser to: **`http://127.0.0.1:8000`**
 | `GET` | `/api/sample-assess/{id}/report` | Retrieve publication-ready exportable Markdown report |
 | `POST` | `/api/assess-text` | Assess raw pasted technical text directly |
 | `POST` | `/api/assess` | Ingest and evaluate an uploaded file (`.pdf`, `.txt`, `.md`) |
+
+---
+
+## Releases & Versioning
+
+Official production and competition releases are cryptographically tagged and distributed via GitHub Releases:
+
+- **Latest Release:** [v2.0.0-argus](https://github.com/Anish1302D/Argus/releases/tag/v2.0.0-argus)
+- **Tag:** `v2.0.0-argus` | **Commit:** `main` (Verified)
+- **Release Highlights:** Complete 14-stage assessment pipeline, adversarial multi-agent adjudication (Optimist, Skeptic, Referee), granular source provenance, advancement gap analysis, and 100% air-gapped deterministic reproducibility.
+- **Standalone Submission Bundle:** Download the pre-packaged, offline-ready artifact [`argus-v2.0.0-submission.zip`](https://github.com/Anish1302D/Argus/releases/download/v2.0.0-argus/argus-v2.0.0-submission.zip) containing all required models, heuristics, and the standalone `run_inference.py` runner.
+
+### Versioning Policy
+ARGUS follows [Semantic Versioning 2.0.0](https://semver.org/):
+- `MAJOR` (v2.x.x): Methodological paradigm upgrades, criteria ladder modifications, or breaking domain model alterations.
+- `MINOR` (vx.1.x): New feature extraction heuristics, additional validation environments, UI enhancements, or diagnostic tooling.
+- `PATCH` (vx.x.1): Pattern refinements, regex optimizations, security sanitizer patches, and non-breaking bug fixes.
+
+---
+
+## Packages & Modular Architecture
+
+ARGUS is architected as an interconnected monorepo of five decoupled, strictly-typed Python packages:
+
+| Package | Directory | Distribution Target | Key Responsibilities |
+|---|---|---|---|
+| **`trl-core`** | [`packages/core`](packages/core) | Core Domain Engine | Pydantic v2 data models (`TechnicalClaim`, `CriteriaMapping`, `UncertaintyProfile`, `AuditTrail`), canonical TRL 1–9 criteria definitions, criteria mapper, relational evidence ledger, advancement gap analyzer, input sanitizer. |
+| **`ml-inference`** | [`packages/ml_inference`](packages/ml_inference) | Intelligence & Features | Quantitative measurement extraction, linguistic modality and temporal parsing, milestone feature extraction, 14-stage ordinal classifier. |
+| **`agent-orchestration`** | [`packages/agent_orchestration`](packages/agent_orchestration) | Adversarial Review | Turn-based review protocol orchestrator, evidence-grounded Optimist reviewer, challenge-driven Skeptic scrutinizer, Referee adjudicator. |
+| **`document-processing`**| [`packages/document_processing`](packages/document_processing) | Ingestion & Slicing | PDF and raw text extraction, structural context chunking, verbatim character offset preservation. |
+| **`competition-engine`** | [`packages/competition_engine`](packages/competition_engine) | Air-Gapped Deployment | Isolated competition execution runtime, CLI adapters, and air-gapped verification harness. |
+
+### Installing Individual Packages in Development
+Each package can be imported independently or installed in editable mode:
+```bash
+python -m pip install -e packages/core
+python -m pip install -e packages/ml_inference
+python -m pip install -e packages/agent_orchestration
+python -m pip install -e packages/document_processing
+```
 
 ---
 
