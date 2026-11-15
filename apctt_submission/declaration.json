@@ -1,0 +1,51 @@
+{
+  "declaration_version": "apctt-declaration-example-v1",
+  "team": "argus",
+  "package_id": "argus-trl-assessor",
+  "package_version": "1.0.0",
+  "declared_package_sha256": "002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc",
+  "team_training": "no_team_training",
+  "no_team_training": true,
+  "training": null,
+  "data_sources": [
+    {
+      "source": "U.S. Geological Survey (USGS) Public Smoke-Test Reports (SIR 2020-5002 / SIR 2019-5142 / OFR 2019-1096)",
+      "version": "public-cases-v1",
+      "date": "2026-10-15",
+      "role": "local smoke-test validation only; not bundled and not memorized",
+      "label_origin": "no labels used; evaluated purely via general-purpose evidence extraction",
+      "linked_project": "APCTT Stage 1 Public Smoke Cases (USGS-SDG-012, USGS-SDG-040, USGS-SDG-061)",
+      "license": "CC0-1.0"
+    },
+    {
+      "source": "APCTT Participant Kit Official Checklist & Demo Fixture (DEMO-001)",
+      "version": "0.5.0",
+      "date": "2026-10-15",
+      "role": "contract schema verification and lifecycle smoke testing",
+      "label_origin": "organizer reference kit fixture",
+      "linked_project": "apctt-participant-kit-0.5.0-cpu",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "Team Argus Domain-Independent Linguistic Phrase Rules (assets/trl_rules.json)",
+      "version": "1.0.0",
+      "date": "2026-11-15",
+      "role": "supplementary phrase anchors for dynamic checklist criterion profiling",
+      "label_origin": "authored by Team Argus",
+      "linked_project": "argus-trl-assessor",
+      "license": "MIT"
+    }
+  ],
+  "inference_assets": {
+    "source_code": "participant_module/ (adapter.py + argus_engine/ pure-Python packages)",
+    "weights": [],
+    "prompts_or_rules": [
+      "assets/trl_rules.json"
+    ],
+    "reference_assets": [],
+    "dependency_declarations": [
+      "apctt-base-2026.1-py312 common base environment (numpy, pydantic, pypdf, pypdfium2, pdfplumber)"
+    ]
+  },
+  "notes": "Deterministic CPU-only hybrid retrieval, claim/modality analysis, contradiction detection, and multi-agent Referee TRL adjudication module. No external or team-trained model weights are used."
+}
