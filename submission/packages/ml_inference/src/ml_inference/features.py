@@ -35,38 +35,38 @@ TRL_PATTERNS = {
     ],
     3: [
         r"(?i)\bproof\s+of\s+concept\b",
-        r"(?i)\bexperimental\s+(proof|demonstration|results?)\b",
+        r"(?i)\bexperimental\s+(proof|demonstrations?|results?)\b",
         r"(?i)\bbench-scale\b",
-        r"(?i)\blaboratory\s+experiment\b",
-        r"(?i)\bmeasured\s+parameter\b",
+        r"(?i)\blaboratory\s+experiments?\b",
+        r"(?i)\bmeasured\s+parameters?\b",
     ],
     4: [
         r"(?i)\blaboratory\s+validation\b",
         r"(?i)\bvalidated\s+in\s+(a\s+)?laboratory\b",
-        r"(?i)\bbreadboard\b",
+        r"(?i)\bbreadboards?\b",
         r"(?i)\bcomponent\s+integration\b",
-        r"(?i)\blow-fidelity\s+system\b",
+        r"(?i)\blow-fidelity\s+systems?\b",
     ],
     5: [
-        r"(?i)\brelevant\s+environment\b",
+        r"(?i)\brelevant\s+environments?\b",
         r"(?i)\bvalidated\s+in\s+(a\s+)?relevant\s+environment\b",
-        r"(?i)\benvironmental\s+(chamber|stress)\b",
-        r"(?i)\bsimulated\s+operational\s+conditions\b",
+        r"(?i)\benvironmental\s+(chamber|stress)es?\b",
+        r"(?i)\bsimulated\s+operational\s+conditions?\b",
         r"(?i)\bthermal\s+vacuum\b",
     ],
     6: [
         r"(?i)\bdemonstrated\s+in\s+(a\s+)?relevant\s+environment\b",
-        r"(?i)\bengineering\s+(model|prototype)\b",
-        r"(?i)\bfield\s+test(ing)?\b",
+        r"(?i)\bengineering\s+(model|prototype)s?\b",
+        r"(?i)\bfield\s+test(ing|s)?\b",
         r"(?i)\brelevant\s+flight\b",
-        r"(?i)\brepresentative\s+platform\b",
+        r"(?i)\brepresentative\s+platforms?\b",
     ],
     7: [
-        r"(?i)\boperational\s+environment\b",
-        r"(?i)\bsystem\s+prototype\b",
+        r"(?i)\boperational\s+environments?\b",
+        r"(?i)\bsystem\s+prototypes?\b",
         r"(?i)\bdemonstrated\s+in\s+an\s+operational\s+environment\b",
-        r"(?i)\bflight\s+demonstration\b",
-        r"(?i)\bcustomer\s+pilot\b",
+        r"(?i)\bflight\s+demonstrations?\b",
+        r"(?i)\bcustomer\s+pilots?\b",
     ],
     8: [
         r"(?i)\bcompleted\s+and\s+qualified\b",
@@ -86,6 +86,41 @@ TRL_PATTERNS = {
     ],
 }
 
+# Conservative local negation handling for milestone mentions. This is deliberately
+# bounded to the containing sentence so unrelated earlier disclaimers do not
+# suppress later, independently stated evidence.
+_NEGATION_BEFORE_RE = re.compile(
+    r"(?i)\b(?:no|never|without|lack(?:s|ed|ing)?|absence\s+of|"
+    r"fail(?:s|ed|ure)?\s+to|unable\s+to|cannot|can't|hasn't|haven't|"
+    r"hadn't|isn't|aren't|wasn't|weren't|not(?!\s+(?:only|merely|just)\b))\b"
+)
+_NEGATION_AFTER_RE = re.compile(
+    r"(?i)\b(?:not\s+(?:yet\s+)?(?:been\s+)?|"
+    r"(?:is|are|was|were|has|have|had|will be|would be|could be|should be)\s+not\s+(?:yet\s+)?(?:been\s+)?)"
+    r"(?:performed|conducted|completed|achieved|demonstrated|undertaken|executed|"
+    r"carried\s+out|validated|built|constructed|tested|established|reached|flown|deployed)\b"
+)
+_SENTENCE_BOUNDARY_RE = re.compile(r"[.!?;\n]")
+
+
+def _match_is_negated(text: str, match: re.Match) -> bool:
+    """Return True when a nearby negation explicitly denies the matched milestone."""
+    start, end = match.span()
+
+    previous_boundaries = list(_SENTENCE_BOUNDARY_RE.finditer(text, 0, start))
+    left_start = previous_boundaries[-1].end() if previous_boundaries else 0
+    left_context = text[max(left_start, start - 120):start]
+
+    next_boundary = _SENTENCE_BOUNDARY_RE.search(text, end)
+    right_end = next_boundary.start() if next_boundary else len(text)
+    right_context = text[end:min(right_end, end + 120)]
+
+    return bool(
+        _NEGATION_BEFORE_RE.search(left_context)
+        or _NEGATION_AFTER_RE.search(right_context)
+    )
+
+
 
 class FeatureExtractor:
     """Extracts verifiable evidence items and tabular ML feature vectors from Documents."""
@@ -100,7 +135,14 @@ class FeatureExtractor:
             # Scan each TRL pattern
             for trl_level, patterns in TRL_PATTERNS.items():
                 for pat in patterns:
-                    match = re.search(pat, text)
+                    match = next(
+                        (
+                            candidate
+                            for candidate in re.finditer(pat, text)
+                            if not _match_is_negated(text, candidate)
+                        ),
+                        None,
+                    )
                     if match:
                         # Determine category based on TRL level
                         cat = self._get_category_for_trl(trl_level)
@@ -145,7 +187,12 @@ class FeatureExtractor:
         # 1. Pattern frequencies per TRL level (1-9)
         trl_counts = []
         for lvl in range(1, 10):
-            cnt = sum(len(re.findall(pat, text_full)) for pat in TRL_PATTERNS[lvl])
+            cnt = sum(
+                1
+                for pat in TRL_PATTERNS[lvl]
+                for match in re.finditer(pat, text_full)
+                if not _match_is_negated(text_full, match)
+            )
             trl_counts.append(float(cnt))
 
         # Highest pattern level with at least 1 match

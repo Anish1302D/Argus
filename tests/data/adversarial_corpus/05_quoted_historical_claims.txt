@@ -1,0 +1,5 @@
+Review of Deep Space Optical Communications
+
+Literature Review: As documented in prior literature, NASA's DSOC system has proven operational service in deep space missions with repeated operational telemetry.
+
+Current Work: In this paper, we present only an initial conceptual formulation of an alternative receiver filter. No hardware or physical experiments were conducted by the authors.

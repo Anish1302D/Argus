@@ -1,0 +1,26 @@
+{
+  "Full Stage 2 Pipeline": {
+    "exact_accuracy": 0.417,
+    "adjacent_accuracy": 0.583,
+    "mae": 2.333,
+    "qwk": 0.104
+  },
+  "No Negation/Modality": {
+    "exact_accuracy": 0.333,
+    "adjacent_accuracy": 0.583,
+    "mae": 2.25,
+    "qwk": 0.176
+  },
+  "No Quality Filter": {
+    "exact_accuracy": 0.333,
+    "adjacent_accuracy": 0.5,
+    "mae": 2.667,
+    "qwk": 0.053
+  },
+  "No Contradiction/Referee": {
+    "exact_accuracy": 0.333,
+    "adjacent_accuracy": 0.583,
+    "mae": 2.75,
+    "qwk": 0.17
+  }
+}

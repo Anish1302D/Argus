@@ -1,0 +1,3 @@
+Superluminal Dispersion Modulation Architecture
+
+Description: Theoretical paper proposing 1000000000x signal propagation improvement with 99.9999999% efficiency. Basic equations and theoretical principles are explored without empirical bench measurements.

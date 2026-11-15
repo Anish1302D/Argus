@@ -1,0 +1,7 @@
+Modular Micro-Rover Subsystems Integration Report
+
+Subsystem A (Communications): Flight transponder has 500 days of demonstrated flight heritage in LEO (TRL 9).
+
+Subsystem B (Drill Assembly): Autonomous drill mechanism is an early proof-of-concept tested only in a laboratory sand-box (TRL 3).
+
+Overall Rover Integration: Subsystems have not yet been integrated into a unified engineering prototype.

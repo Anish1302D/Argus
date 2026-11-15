@@ -1,5 +1,5 @@
 """
-TRL Debate Engine - FastAPI Server.
+Argus - FastAPI application server.
 Provides REST API endpoints and serves the interactive adversarial debate web dashboard.
 """
 
@@ -17,8 +17,8 @@ from api.service import SAMPLE_DOCUMENTS, get_service
 from trl_core.trl_definitions import get_all_definitions
 
 app = FastAPI(
-    title="TRL Debate Engine API",
-    description="Adversarial Multi-Agent AI for Technology Readiness Assessment",
+    title="Argus API",
+    description="Evidence-grounded technology readiness assessment with deterministic adjudication and adversarial review synthesis.",
     version="0.1.0",
 )
 
@@ -26,7 +26,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -56,12 +56,12 @@ async def health_check():
         "status": "HEALTHY",
         "version": "0.1.0",
         "competition": "Techfest 2026-27 | 2nd APCTT Hackathon 2026",
-        "engine": "TRL Multi-Agent Adversarial Debate & Deterministic Adjudication Engine",
+        "engine": "Argus evidence-grounded readiness assessment engine",
         "layers": {
             "layer_1_document_processing": "Active (pypdfium2 / UTF-8)",
-            "layer_2_ml_inference": "Active (25-dim features + LightGBM/Rule gate)",
-            "layer_3_agent_orchestration": "Active (Optimist, Skeptic, Referee)",
-            "layer_4_web_interface": "Active (FastAPI + Tailwind/Charts)",
+            "layer_2_ml_inference": "Active (25-dimensional evidence features + deterministic rule adjudication)",
+            "layer_3_agent_orchestration": "Active (deterministic Optimist, Skeptic, and Referee review synthesis; no independent LLM agents)",
+            "layer_4_web_interface": "Active (FastAPI + static Argus research interface)",
         }
     }
 
@@ -84,7 +84,7 @@ async def list_sample_documents():
 
 
 @app.post("/api/sample-assess/{sample_id}")
-async def assess_sample_document(sample_id: str, strict_security: bool = False):
+def assess_sample_document(sample_id: str, strict_security: bool = False):
     """Run full assessment on one of the preloaded sample technical papers."""
     if sample_id not in SAMPLE_DOCUMENTS:
         raise HTTPException(status_code=404, detail=f"Sample document '{sample_id}' not found.")
@@ -99,8 +99,39 @@ async def assess_sample_document(sample_id: str, strict_security: bool = False):
     return result
 
 
+@app.get("/api/sample-assess/{sample_id}/report", response_class=HTMLResponse)
+def get_sample_report_html(sample_id: str):
+    """Retrieve full exportable technical assessment report for a sample document (Issue 26)."""
+    if sample_id not in SAMPLE_DOCUMENTS:
+        raise HTTPException(status_code=404, detail=f"Sample document '{sample_id}' not found.")
+    sample = SAMPLE_DOCUMENTS[sample_id]
+    service = get_service()
+    result = service.assess_text(
+        text=sample["content"],
+        document_title=sample["title"],
+        strict_security=False,
+    )
+    report_md = service.generate_assessment_report(result)
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Argus Technical Assessment Report — {sample_id}</title>
+<style>
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #16150F; background: #F8F6F0; }}
+pre {{ background: #ECE7DA; padding: 20px; border-radius: 4px; overflow-x: auto; font-family: monospace; font-size: 0.9em; white-space: pre-wrap; }}
+h1, h2, h3 {{ color: #CF4520; }}
+</style>
+</head>
+<body>
+<pre>{report_md}</pre>
+</body>
+</html>"""
+    return HTMLResponse(content=html_content)
+
+
 @app.post("/api/assess-text")
-async def assess_text_endpoint(req: TextAssessmentRequest):
+def assess_text_endpoint(req: TextAssessmentRequest):
     """Assess raw technical text directly."""
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="Provided document text is empty.")
@@ -114,7 +145,7 @@ async def assess_text_endpoint(req: TextAssessmentRequest):
 
 
 @app.post("/api/assess")
-async def assess_file_endpoint(
+def assess_file_endpoint(
     file: UploadFile = File(...),
     strict_security: bool = Form(False)
 ):

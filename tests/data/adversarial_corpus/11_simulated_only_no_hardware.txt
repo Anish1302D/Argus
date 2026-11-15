@@ -1,0 +1,5 @@
+Computational Aerodynamic Analysis of Mars Entry Vehicle
+
+Abstract: Finite element simulation and computational fluid dynamics (CFD) modeling of hypersonic entry.
+
+Numerical Methodology: ANSYS Fluent simulations were run across 50,000 grid cells simulating Mach 25 entry. No physical model, wind tunnel test, or hardware prototype was fabricated or tested.

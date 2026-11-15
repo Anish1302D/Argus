@@ -1,0 +1,5 @@
+Investigation of Novel Magnetic Levitation Bearings
+
+Abstract: We formulate theoretical physics principles of magnetic levitation for propulsion bearings.
+
+Status and Disclaimer: No laboratory experiment has been conducted. Furthermore, neither a benchtop breadboard nor an engineering prototype has been constructed or tested. The hardware has not yet been fabricated, and flight demonstration has never been attempted or planned at this stage.

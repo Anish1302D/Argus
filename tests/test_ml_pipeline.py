@@ -9,7 +9,7 @@ import pytest
 from document_processing.extractor import DocumentExtractor
 from ml_inference.classifier import TRLOrdinalClassifier
 from ml_inference.features import FeatureExtractor
-from trl_core.models import Document, EvidenceCategory, EvidenceStrength
+from trl_core.models import Chunk, Document, EvidenceCategory, EvidenceStrength
 
 
 def test_document_extractor_pdf(sample_synthetic_pdf: Path):
@@ -77,4 +77,79 @@ def test_ordinal_classifier_fit_and_predict(sample_valid_paper: Path):
     ml_assessment = ml_classifier.adjudicate(doc, evidence_items, feat_vec)
     assert 1 <= ml_assessment.predicted_trl <= 9
     assert 0.0 <= ml_assessment.confidence <= 1.0
+
+def _document_from_text(text: str) -> Document:
+    """Build a one-chunk document for focused evidence-mining regression tests."""
+    chunk = Chunk(
+        id="negation_chunk_001",
+        document_id="negation_regression",
+        text=text,
+        page_number=1,
+        section_name=None,
+        char_offset_start=0,
+        char_offset_end=len(text),
+        is_sanitized=True,
+    )
+    return Document(
+        id="negation_regression",
+        name="negation-regression.txt",
+        raw_content=text,
+        chunks=[chunk],
+        metadata={"format": "txt", "page_count": 1},
+    )
+
+
+def test_feature_extractor_ignores_negated_flight_demonstration():
+    text = (
+        "The system has not yet undergone actual suborbital sounding rocket "
+        "flight demonstration (TRL 7)."
+    )
+    extractor = FeatureExtractor()
+    document = _document_from_text(text)
+
+    evidence = extractor.extract_evidence(document)
+    feature_vector, feature_names = extractor.extract_features(document, evidence)
+
+    assert not any(item.target_trl == 7 for item in evidence)
+    assert feature_vector[feature_names.index("trl_7_keyword_freq")] == 0
+    assert feature_vector[feature_names.index("highest_matched_trl")] == 1
+
+
+def test_feature_extractor_ignores_absent_lab_and_breadboard_milestones():
+    text = (
+        "No laboratory experiment, simulation, breadboard, or hardware "
+        "prototype has been constructed or tested."
+    )
+    extractor = FeatureExtractor()
+    document = _document_from_text(text)
+
+    evidence = extractor.extract_evidence(document)
+    feature_vector, feature_names = extractor.extract_features(document, evidence)
+
+    assert not any(item.target_trl in (3, 4) for item in evidence)
+    assert feature_vector[feature_names.index("trl_3_keyword_freq")] == 0
+    assert feature_vector[feature_names.index("trl_4_keyword_freq")] == 0
+
+
+def test_feature_extractor_keeps_positive_flight_demonstration_evidence():
+    text = (
+        "A full system prototype completed a successful flight demonstration "
+        "during the operational test campaign."
+    )
+    extractor = FeatureExtractor()
+    document = _document_from_text(text)
+
+    evidence = extractor.extract_evidence(document)
+
+    assert any(item.target_trl == 7 for item in evidence)
+
+
+def test_feature_extractor_detects_postposed_milestone_negation():
+    text = "The flight demonstration was not performed; only a lab test was completed."
+    extractor = FeatureExtractor()
+    document = _document_from_text(text)
+
+    evidence = extractor.extract_evidence(document)
+
+    assert not any(item.target_trl == 7 for item in evidence)
 
