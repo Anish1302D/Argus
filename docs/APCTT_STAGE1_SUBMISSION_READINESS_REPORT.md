@@ -1,24 +1,24 @@
 # ARGUS — APCTT Stage 1 Submission Readiness Report
 
-**Verdict:** `READY FOR SUBMISSION` *(Development-Kit Validated against `apctt-participant-kit-0.5.0-cpu` / `0.5.0-cuda`; verify final event portal kit release before portal upload)*
+**Verdict:** `VALID AGAINST DEVELOPMENT KIT ONLY` *(Validated against `apctt-participant-kit-0.5.0-cpu` / `0.5.0-cuda`, `apctt-api-v0.2-draft`; verify final event portal kit release before portal upload)*
 
 ---
 
 ## 1. Executive Readiness Verdict
 
-**`READY FOR SUBMISSION`**
+**`VALID AGAINST DEVELOPMENT KIT ONLY`**
 
-ARGUS (**Automated Readiness Grading & Uncertainty Synthesis**) has been fully integrated with the APCTT Stage 1 participant module contract (`participant_module.adapter:AssessmentModule`), packaged into the canonical APCTT submission directory (`apctt_submission/`), compiled into the submission archive (`artifacts/apctt/argus_submission.zip`), and verified against all official participant-kit validators, contract validators, cold-worker subprocess protocols, and FastAPI server integration endpoints:
+ARGUS (**Automated Readiness Grading & Uncertainty Synthesis**) has been fully integrated with the APCTT Stage 1 participant module contract (`participant_module.adapter:AssessmentModule`), packaged into the canonical APCTT submission directory (`apctt_submission/`), compiled into the submission archive (`artifacts/apctt/argus_submission.zip`), and verified against all validators, contract schemas, cold-worker subprocess protocols, and FastAPI server integration endpoints of the locally installed `0.5.0` development kit:
 
 - **Kit Manifest Verification**:
   - `apctt-participant-kit-0.5.0-cpu/MANIFEST.sha256`: **129 / 129 files OK** (`0` modified, `0` missing).
   - `apctt-participant-kit-0.5.0-cuda/MANIFEST.sha256`: **129 / 129 files OK** (`0` modified, `0` missing).
 - **Licence Policy Audit (`tools/check_licenses.py --bundle apctt_submission`)**:
-  - **PASS (`exit 0`)** — `4 allowed, 0 review, 0 denied` under `apctt-license-policy-v2` (`0.4.0`).
+  - **PASS (`exit 0`)** — `4 allowed, 0 review, 0 denied` under `apctt-license-policy-v2` (`0.4.0`). `participant_module/LICENSE` verified with `Copyright (c) 2026 Team Argus (Anish Mogam)` and zero unresolved placeholders.
 - **Submission Packaging & Verification (`tools/make_submission.py` & `--check`)**:
-  - **PASS (`result: VALID (exit 0)`)** — Archive `artifacts/apctt/argus_submission.zip` (`86.4 KB <= 2.0 GB`), `submission_version: "apctt-submission-v3"`, `base_id: "apctt-base-9e7fe1324bb6"`, `declared_package_sha256: 002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc`.
+  - **PASS (`result: VALID (exit 0)`)** — Archive `artifacts/apctt/argus_submission.zip` (`86,997 bytes` / `87.0 KB <= 2.0 GB`), `submission_version: "apctt-submission-v3"`, `base_id: "apctt-base-9e7fe1324bb6"`, `zip_sha256: 28c2c350dd88f88b81548a69dc9766fbbc40b025dd4b423963f95b90969819fc`, `declared_package_sha256: 35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d`.
 - **Full Test Suite (`pytest tests/`)**:
-  - **91 / 91 tests PASS (`0` failures)** — all 69 pre-existing Argus regression tests + 22 comprehensive APCTT Stage 1 contract, adversarial, security, cold-worker, server E2E, and USGS/SDG smoke tests.
+  - **91 / 91 tests PASS (`0` failures)** — all 69 pre-existing Argus regression tests + 22 comprehensive APCTT Stage 1 contract, adversarial, security, cold-worker, server E2E, extracted-ZIP isolated subprocess, and USGS/SDG smoke tests.
 
 ---
 
@@ -27,18 +27,17 @@ ARGUS (**Automated Readiness Grading & Uncertainty Synthesis**) has been fully i
 | Property | Verified Value |
 | :--- | :--- |
 | **Discovered Local Kits** | `apctt-participant-kit-0.5.0-cpu/` and `apctt-participant-kit-0.5.0-cuda/` |
-| **Kit Version / API Version** | `0.5.0` (`apctt-api-v0.2-draft`) |
+| **Kit Version / API Version** | `0.5.0` (`apctt-api-v0.2-draft`, development kit) |
 | **Worker Protocol Version** | `apctt-worker-v2` |
 | **Submission Schema Version** | `apctt-submission-v3` (`contracts/submission.schema.json`) |
-| **CPU Base Environment ID** | `apctt-base-9e7fe1324bb6` (`python_abi: cp311`, `platform: linux_x86_64`, `variant: cpu`) |
-| **CUDA Base Environment ID** | `apctt-base-23f5f810549b` (`python_abi: cp311`, `platform: linux_x86_64`, `variant: cuda`) |
+| **Common Base Environment ID** | `apctt-base-9e7fe1324bb6` (`python: "3.12"`, `platform: "x86_64-manylinux_2_28"`, decision D60) |
 | **Official Checklist Version** | `APCTT-2026-CHECKLIST-v1` (12 criteria: `APCTT-C01` .. `APCTT-C12`) |
 | **Demo Checklist Version** | `APCTT-2026-DEMO-CHECKLIST-v1` |
 | **Licence Policy Version** | `apctt-license-policy-v2` (`0.4.0`) |
-| **Model Catalogue Version** | `apctt-model-catalog-v1` (`0.4.0`, 6 approved models) |
-| **Public Cases Manifest** | `apctt-public-cases-v1` (`1.0.0`, 61 USGS/SDG public cases) |
+| **Model Catalogue Version** | `apctt-model-catalog-v1` (`0.4.0`) |
+| **Public Cases Manifest** | `apctt-public-cases-v1` (99 USGS/SDG public cases, 3 smoke cases) |
 | **Manifest Integrity (`MANIFEST.sha256`)** | Verified **129/129 files intact** in both `0.5.0-cpu` and `0.5.0-cuda`; zero kit files modified |
-| **Official Event Status Note** | The locally installed `0.5.0` (`apctt-api-v0.2-draft`) kit README notes that it is a pre-freeze development kit. Its contracts, schemas, and validators have been used strictly without mixing versions. Before final portal upload, verify whether the organizer portal has published a post-`0.5.0` frozen kit and re-run `scripts/build_apctt_submission.py` if `base_id` changes. |
+| **Official Event Status Note** | The locally installed `0.5.0` (`apctt-api-v0.2-draft`) kit README explicitly identifies itself as a development kit rather than the frozen event release. Validation is therefore reported as **VALID AGAINST DEVELOPMENT KIT ONLY**. |
 
 ---
 
@@ -159,8 +158,8 @@ Returned for operational/input failures while still populating `checklist_versio
 
 ## 10. Model Catalogue, Asset, and Base-Environment Compliance
 
-- **Base Environment**: Targets `apctt-base-9e7fe1324bb6` (CPU) and is fully compatible with `apctt-base-23f5f810549b` (CUDA).
-- **Runtime Dependencies Used**: Strictly Python 3.11+ standard library plus pre-installed base-environment packages (`pypdf`, `pydantic`, `numpy`, `scikit-learn`).
+- **Base Environment**: Targets `apctt-base-9e7fe1324bb6` (CPython `3.12`, `x86_64-manylinux_2_28`, decision D60).
+- **Runtime Dependencies Used**: Strictly Python `3.12` standard library plus pre-installed base-environment packages (`numpy==2.5.3`, `pydantic==2.13.5`, `pypdf==6.19.0`, and optional fallbacks `pypdfium2==5.14.0`, `pdfplumber==0.11.10`, `scikit-learn==1.9.1`).
 - **Catalogue Models (`models`)**: `[]` (no external LLM/checkpoint weights required; zero GPU/VRAM risk, sub-second deterministic CPU execution).
 - **Declared Assets (`assets/`)**: `assets/trl_rules.json` (domain-independent lexical patterns and TRL rule configuration, MIT licensed).
 - **Zero Forbidden Files**: No virtual environments, wheels, `.so`/`.dll`/`.pyd` binaries, `.pyc`/`__pycache__`, symlinks, or undeclared weight files (`*.bin`, `*.pt`, `*.safetensors`, `*.onnx`, `*.pkl`, `*.joblib`).
@@ -169,12 +168,12 @@ Returned for operational/input failures while still populating `checklist_versio
 
 ## 11. Licence and Third-Party Audit Results
 
-- **Package Licence**: `MIT` (`apctt_submission/participant_module/LICENSE`).
-- **Third-Party Notices**: Documented in `apctt_submission/participant_module/THIRD_PARTY_NOTICES.md`.
-- **Declaration File**: `apctt_submission/declaration.json` conforms to `SUBMISSION_DECLARATION.example.json` (`schema_version: "apctt-submission-declaration-v1"`), declaring:
-  1. `APCTT Participant Kit Official Checklist & Contracts` (`Apache-2.0`)
-  2. `U.S. Geological Survey (USGS) Scientific Investigations Reports (Public Smoke Test Corpus)` (`CC0-1.0`)
-  3. `Team Argus Domain-Independent Synthetic TRL Calibration Rules` (`MIT`)
+- **Package Licence**: `MIT` (`apctt_submission/participant_module/LICENSE`), containing `Copyright (c) 2026 Team Argus (Anish Mogam)` and zero unresolved template placeholders.
+- **Third-Party Notices**: Documented in `apctt_submission/participant_module/THIRD_PARTY_NOTICES.md` with exact versions and licenses from `apctt-base-9e7fe1324bb6` (`numpy==2.5.3` `BSD-3-Clause`, `pydantic==2.13.5` `MIT`, `pydantic-core==2.46.5` `MIT`, `annotated-types==0.8.0` `MIT`, `typing-extensions==4.16.0` `PSF-2.0`, `typing-inspection==0.4.4` `MIT`, `pypdf==6.19.0` `BSD-3-Clause`, `pypdfium2==5.14.0` `Apache-2.0 OR BSD-3-Clause`, `pdfplumber==0.11.10` `MIT`, `pdfminer-six==20260107` `MIT`, `pillow==12.3.0` `MIT-CMU`, `scikit-learn==1.9.1` `BSD-3-Clause`, `scipy==1.18.1` `BSD-3-Clause`, `joblib==1.6.0` `BSD-3-Clause`, `threadpoolctl==3.7.0` `BSD-3-Clause`) plus preserved upstream attribution for inherited `trl-debate-engine` / ARGUS core modules (`Apache-2.0`).
+- **Declaration File**: `apctt_submission/declaration.json` (`declaration_version: "apctt-declaration-example-v1"`, `declared_package_sha256: "35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d"`), declaring:
+  1. `APCTT Participant Kit Official Checklist & Demo Fixture (DEMO-001)` (`Apache-2.0`)
+  2. `U.S. Geological Survey (USGS) Public Smoke-Test Reports` (`CC0-1.0`)
+  3. `Team Argus Domain-Independent Linguistic Phrase Rules (assets/trl_rules.json)` (`MIT`)
 
 ---
 
@@ -205,9 +204,9 @@ apctt_submission/
 ```
 
 - **Submission Archive**: `artifacts/apctt/argus_submission.zip`
-- **Archive Size**: `86.4 KB` (`88,476 bytes`, well under the `2.0 GB` limit)
-- **Archive SHA-256 (`zip_sha256`)**: `93522182a26cd694161f68865648552c19001a53830d543525a72504984e4ffa`
-- **Declared Package SHA-256 (`declared_package_sha256`)**: `002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc`
+- **Archive Size**: `86,997 bytes` (`87.0 KB`, well under the `2.0 GB` limit)
+- **Archive SHA-256 (`zip_sha256`)**: `28c2c350dd88f88b81548a69dc9766fbbc40b025dd4b423963f95b90969819fc`
+- **Declared Package SHA-256 (`declared_package_sha256`)**: `35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d`
 
 ---
 
@@ -242,15 +241,15 @@ python apctt-participant-kit-0.5.0-cpu/tools/make_submission.py apctt_submission
 Verbatim Output:
 ```text
 zip                      D:\Projects\Argus\artifacts\apctt\argus_submission.zip
-zip_sha256               93522182a26cd694161f68865648552c19001a53830d543525a72504984e4ffa
-size                     86.4 KB
-declared_package_sha256  002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc
-PASS    size: 86.4 KB <= 2.0 GB
+zip_sha256               28c2c350dd88f88b81548a69dc9766fbbc40b025dd4b423963f95b90969819fc
+size                     87.0 KB
+declared_package_sha256  35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d
+PASS    size: 87.0 KB <= 2.0 GB
 PASS    layout: participant_module/, assets/, submission.json, declaration.json, README.md
 PASS    submission.json: team argus, base_id apctt-base-9e7fe1324bb6
 PASS    models: no catalogue model
 PASS    contents: no environment, packages, caches, links, catalogue weights or undeclared weights
-PASS    package hash matches submission.json: 002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc
+PASS    package hash matches submission.json: 35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d
 PASS    licence: MIT, participant_module/LICENSE present
 REMINDER third-party pure-Python code in your package is your responsibility: if a licence or security problem arises later, your team bears the legal responsibility and the award is revoked (D66)
 result: VALID (exit 0)
@@ -268,15 +267,15 @@ python apctt-participant-kit-0.5.0-cpu/tools/make_submission.py --check artifact
 Verbatim Output:
 ```text
 zip                      D:\Projects\Argus\artifacts\apctt\argus_submission.zip
-zip_sha256               93522182a26cd694161f68865648552c19001a53830d543525a72504984e4ffa
-size                     86.4 KB
-declared_package_sha256  002e2f1e3d56859280b1de2b841e8e74cca51512dd51cc
-PASS    size: 86.4 KB <= 2.0 GB
+zip_sha256               28c2c350dd88f88b81548a69dc9766fbbc40b025dd4b423963f95b90969819fc
+size                     87.0 KB
+declared_package_sha256  35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d
+PASS    size: 87.0 KB <= 2.0 GB
 PASS    layout: participant_module/, assets/, submission.json, declaration.json, README.md
 PASS    submission.json: team argus, base_id apctt-base-9e7fe1324bb6
 PASS    models: no catalogue model
 PASS    contents: no environment, packages, caches, links, catalogue weights or undeclared weights
-PASS    package hash matches submission.json: 002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc
+PASS    package hash matches submission.json: 35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d
 PASS    licence: MIT, participant_module/LICENSE present
 REMINDER third-party pure-Python code in your package is your responsibility: if a licence or security problem arises later, your team bears the legal responsibility and the award is revoked (D66)
 result: VALID (exit 0)
@@ -287,9 +286,9 @@ result: VALID (exit 0)
 ## 16. Local Server and Cold-Worker Integration Results
 
 Verified in automated tests (`test_scenario_z1`, `test_scenario_z2`, `test_scenario_z3`):
-1. **Isolated `PYTHONPATH` Subprocess Import (`test_scenario_z1`)**:
-   - Imported `participant_module.adapter:AssessmentModule` in a fresh Python interpreter with `PYTHONPATH=apctt_submission` and the repository root excluded from `sys.path`.
-   - Executed `load -> assess -> reset_case -> close` and verified `assessment_status == "completed"`, `predicted_trl == 4`.
+1. **Extracted ZIP Isolated Subprocess Smoke Test (`test_scenario_z1`)**:
+   - Extracted `artifacts/apctt/argus_submission.zip` into a clean temporary directory and imported `participant_module.adapter:AssessmentModule` in a fresh Python interpreter with `PYTHONPATH=<extracted_dir>`, `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`, and the repository root excluded from `sys.path`.
+   - Executed `load -> assess -> reset_case -> close` and verified `validate_result == []`, `assessment_status == "completed"`, `predicted_trl == 4`.
 2. **Cold-Per-Case Worker Protocol (`test_scenario_z2`)**:
    - Invoked `apctt-participant-kit-0.5.0-cpu/src/apctt_runtime/worker.py --run-id <id>` across multiple fresh subprocesses with `apctt-worker-v2` stdin JSON envelopes.
    - Verified atomic creation of `result.json` (passing `validate_result`) and `observation.json` (`timings_ms` recorded for `load`, `assess`, `cleanup`).
@@ -369,8 +368,8 @@ Evaluated against `docs/EXAMPLE_REQUEST.json` (`DEMO-001`) and 3 official USGS/S
 
 ## 20. Remaining Manual Steps Before Uploading to the Competition Portal
 
-1. Check the official Techfest / APCTT participant portal to confirm whether `0.5.0` (`base_id: apctt-base-9e7fe1324bb6` for CPU or `apctt-base-23f5f810549b` for CUDA) is the final event kit version.
-2. If the organizer portal specifies the CUDA base environment (`apctt-base-23f5f810549b`) or a newer kit directory, run:
+1. Check the official Techfest / APCTT participant portal to confirm whether `0.5.0` (`base_id: apctt-base-9e7fe1324bb6`) is the final event kit version.
+2. If the organizer portal publishes a newer frozen kit directory, update `KIT_DIR` in `scripts/build_apctt_submission.py` and run:
    ```powershell
    python scripts/build_apctt_submission.py
    ```
@@ -403,16 +402,10 @@ python -m pytest tests/ -v
 
 ## 22. Final Git Branch, Commit Hashes, and Working-Tree Status
 
-- **Active Feature Branch**: `feature/apctt-stage1-submission-ready` (branched off `origin/main` `c19b0be` while preserving all local work).
-- **Incremental Commits on `feature/apctt-stage1-submission-ready`**:
-  - `c19b0be` — `feat: add apctt-participant-kit version 0.5.0-cpu package and components` (`origin/main`)
-  - `bf6f8fb` — `feat(apctt): complete Stage 1 Participant Kit adapter, retrieval engine, validation UI, and submission bundle`
-  - `b919d78` — `feat: add APCTT participant kit integration and submission documentation`
-  - `ea4894a` — `chore(submission): preserve standalone CLI submission and remove legacy my_submission workspace`
-  - `fd01cbc` — `feat(apctt): integrate Argus core orchestration, security sanitization, and simulation gating in AssessmentModule`
-  - `09a1dfb` — `feat(apctt): build validated apctt_submission bundle and artifacts/apctt/argus_submission.zip`
+- **Corrective Branch**: `fix/apctt-final-submission-corrections` (branched directly from `origin/main` `10d1e81`).
 - **Participant Kits Unmodified**: `git status apctt-participant-kit-0.5.0-cpu apctt-participant-kit-0.5.0-cuda` reports zero modified or untracked files.
-- **Pre-existing `submission/` Directory Preserved**: `git diff origin/main -- submission/ scripts/package_submission.py` preserves the original standalone CLI submission package.
+- **Pre-existing `submission/` Directory Preserved**: `git diff origin/main -- submission/ scripts/package_submission.py` reports zero changes.
 - **Working-Tree Status**: Clean (`nothing to commit, working tree clean`).
+
 
 

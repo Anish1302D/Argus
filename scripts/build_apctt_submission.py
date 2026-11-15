@@ -104,33 +104,63 @@ __all__ = ["AssessmentModule"]
 
     # 3. Write participant_module/LICENSE (MIT text as required by Decision D72)
     mit_template = (KIT_DIR / "licenses" / "MIT.txt").read_text(encoding="utf-8")
-    mit_text = mit_template.replace("[year]", "2026").replace("[fullname]", "Team Argus (Anish Mogam)")
-    (MODULE_DIR / "LICENSE").write_text(mit_text, encoding="utf-8")
+    mit_text = (
+        mit_template.replace("<year>", "2026")
+        .replace("<copyright holders>", "Team Argus (Anish Mogam)")
+        .replace("[year]", "2026")
+        .replace("[fullname]", "Team Argus (Anish Mogam)")
+    )
+    assert "Copyright (c) 2026 Team Argus (Anish Mogam)" in mit_text, (
+        "Failed to populate copyright line in participant_module/LICENSE"
+    )
+    for placeholder in ("<year>", "<copyright holders>", "[year]", "[fullname]"):
+        assert placeholder not in mit_text, f"Unresolved placeholder in LICENSE: {placeholder}"
+    (MODULE_DIR / "LICENSE").write_text(mit_text, encoding="utf-8", newline="\n")
 
-    # 4. Write participant_module/THIRD_PARTY_NOTICES.md (including upstream provenance)
-    notices_text = """# Third-Party Notices & Upstream Provenance
+    # 4. Write participant_module/THIRD_PARTY_NOTICES.md (with exact base versions & upstream provenance)
+    base_env = json.loads((KIT_DIR / "contracts" / "base-environment.json").read_text(encoding="utf-8"))
+    base_id = str(base_env["base_id"])
+    notices_text = f"""# Third-Party Notices & Upstream Provenance
 
 ## 1. Team Argus Participant Module (`participant_module/`)
+- **Component**: `argus-trl-assessor` (`participant_module/adapter.py`, `competition_engine/apctt_adapter.py`, `retrieval/engine.py`)
+- **Version**: `1.0.0`
 - **Copyright**: Copyright (c) 2026 Team Argus (Anish Mogam)
-- **License**: MIT License (per APCTT Decision D72; see `participant_module/LICENSE`)
+- **License**: `MIT` (per APCTT Decision D72; see `participant_module/LICENSE`)
+- **Distribution**: Copied into `participant_module/`
 
-## 2. Upstream Repository Provenance (`trl-debate-engine` / Argus Core)
-- **Upstream Project**: `trl-debate-engine` / ARGUS (`ishaj306/trl-debate-engine`, forked to `Anish1302D/Argus`)
+## 2. Inherited & Adapted Upstream ARGUS Code (`participant_module/argus_engine/`)
+- **Component**: `trl-debate-engine` / ARGUS Core (`trl_core`, `document_processing`, `ml_inference`, `agent_orchestration`, `competition_engine/runner.py`)
+- **Upstream Repository**: `ishaj306/trl-debate-engine` (forked to `Anish1302D/Argus`, version `0.1.0`)
 - **Upstream Copyright**: Copyright (c) 2026 Isha J & Contributors
-- **Original Upstream License**: Apache License 2.0 (`Apache-2.0`)
-- **Notice**: Foundational data models (`trl_core`), linguistic modality/claim extractors (`ml_inference`), and multi-agent debate abstractions (`agent_orchestration`) were adapted from the project's core repository and integrated with the MIT-licensed APCTT Stage 1 adapter (`competition_engine/apctt_adapter.py`) and hybrid BM25 retrieval engine (`retrieval/engine.py`). All original copyright and attribution notices are preserved herein.
+- **Original Upstream License**: `Apache-2.0`
+- **Distribution**: Copied into `participant_module/argus_engine/`
+- **Attribution Notice**: Foundational data models (`trl_core`), linguistic modality/claim extractors (`ml_inference`), PDF extraction utilities (`document_processing`), and multi-agent debate abstractions (`agent_orchestration`) were inherited and adapted from the upstream ARGUS / `trl-debate-engine` repository and integrated with the MIT-licensed APCTT Stage 1 adapter (`competition_engine/apctt_adapter.py`) and hybrid BM25 retrieval engine (`retrieval/engine.py`). All upstream copyright and attribution notices are preserved herein.
 
-## 3. Organizer Common Base Environment Dependencies (`apctt-base-2026.1-py312`)
-`participant_module` ships zero third-party wheels, binaries, or copied base packages. At runtime it imports only from the Python standard library and packages pre-installed in the organizer's read-only base environment (`apctt-base-2026.1-py312`):
-- **NumPy** (`numpy`): BSD-3-Clause
-- **Pydantic** (`pydantic`): MIT
-- **pypdf** (`pypdf`): BSD-3-Clause
-- **pypdfium2** (`pypdfium2`): Apache-2.0 OR BSD-3-Clause
-- **pdfplumber** (`pdfplumber`) / **pdfminer.six** (`pdfminer.six`): MIT
+## 3. Runtime Dependencies from Organizer Common Base Environment (`{base_id}`)
+`participant_module` ships zero third-party wheels, compiled binaries, or copied base-environment packages. At runtime it imports only from the Python `3.12` standard library and packages pre-installed in the organizer's read-only common base environment (`{base_id}`, `x86_64-manylinux_2_28`, pinned in `requirements-base.lock` / `constraints-base.txt` of `apctt-participant-kit-0.5.0-cpu`):
+
+| Component / Package | Exact Version (`{base_id}`) | License | Origin / Supply Method |
+| :--- | :--- | :--- | :--- |
+| `numpy` | `2.5.3` | `BSD-3-Clause` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pydantic` | `2.13.5` | `MIT` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pydantic-core` | `2.46.5` | `MIT` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `annotated-types` | `0.8.0` | `MIT` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `typing-extensions` | `4.16.0` | `PSF-2.0` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `typing-inspection` | `0.4.4` | `MIT` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pypdf` | `6.19.0` | `BSD-3-Clause` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pypdfium2` *(optional fallback PDF reader)* | `5.14.0` | `Apache-2.0 OR BSD-3-Clause` (with bundled PDFium notices) | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pdfplumber` *(optional fallback PDF reader)* | `0.11.10` | `MIT` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pdfminer-six` *(transitive via `pdfplumber`)* | `20260107` | `MIT` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `pillow` *(transitive via `pdfplumber`)* | `12.3.0` | `MIT-CMU` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `scikit-learn` *(optional ML feature utility)* | `1.9.1` | `BSD-3-Clause` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `scipy` *(transitive via `scikit-learn`)* | `1.18.1` | `BSD-3-Clause` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `joblib` *(transitive via `scikit-learn`)* | `1.6.0` | `BSD-3-Clause` | Supplied by organizer's common base (`{base_id}`), not bundled |
+| `threadpoolctl` *(transitive via `scikit-learn`)* | `3.7.0` | `BSD-3-Clause` | Supplied by organizer's common base (`{base_id}`), not bundled |
 """
-    (MODULE_DIR / "THIRD_PARTY_NOTICES.md").write_text(notices_text, encoding="utf-8")
+    (MODULE_DIR / "THIRD_PARTY_NOTICES.md").write_text(notices_text, encoding="utf-8", newline="\n")
 
-    # 5. Write assets/trl_rules.json
+    # 5. Write assets/trl_rules.json (domain-independent phrase anchors)
     rules_payload = {
         "methodology_version": "argus-apctt-stage1-v1.0",
         "description": "Domain-independent phrase anchors supplementing dynamic checklist profiling.",
@@ -141,9 +171,9 @@ __all__ = ["AssessmentModule"]
             "APCTT-C04": {"phrases": ["laboratory test", "laboratory environment", "breadboard", "coupled simulation"]},
             "APCTT-C05": {"phrases": ["relevant environment", "representative conditions", "field observations"]},
             "APCTT-C06": {"phrases": ["demonstrated in a relevant environment", "calibrated model", "prototype demonstration"]},
-            "APCTT-C07": {"phrases": ["operational environment", "field deployment", "flood-inundation map library", "streamgage"]},
-            "APCTT-C08": {"phrases": ["completed and qualified", "qualification testing", "user guide"]},
-            "APCTT-C09": {"phrases": ["mission operations", "proven in successful", "monitoring storm tide"]},
+            "APCTT-C07": {"phrases": ["operational environment", "field deployment", "operational demonstration", "field trial"]},
+            "APCTT-C08": {"phrases": ["completed and qualified", "qualification testing", "user guide", "acceptance testing"]},
+            "APCTT-C09": {"phrases": ["mission operations", "proven in successful", "operational service", "mission proven"]},
             "APCTT-C10": {"phrases": ["quantified results", "acceptance criteria", "statistically satisfactory", "Nash-Sutcliffe", "RMSE"]},
             "APCTT-C11": {"phrases": ["test conditions", "study area", "model configuration", "boundary conditions"]},
             "APCTT-C12": {"phrases": ["assessment target", "evaluated system", "coupled model"]},
@@ -152,11 +182,10 @@ __all__ = ["AssessmentModule"]
     (ASSETS_DIR / "trl_rules.json").write_text(
         json.dumps(rules_payload, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
     # 6. Write submission.json (declared_package_sha256 will be populated by tools/make_submission.py)
-    base_env = json.loads((KIT_DIR / "contracts" / "base-environment.json").read_text(encoding="utf-8"))
-    base_id = str(base_env["base_id"])
     submission_payload = {
         "submission_version": "apctt-submission-v3",
         "team": "argus",
@@ -177,6 +206,7 @@ __all__ = ["AssessmentModule"]
     (SUBMISSION_DIR / "submission.json").write_text(
         json.dumps(submission_payload, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
     # 7. Write declaration.json
@@ -224,7 +254,7 @@ __all__ = ["AssessmentModule"]
             "prompts_or_rules": ["assets/trl_rules.json"],
             "reference_assets": [],
             "dependency_declarations": [
-                "apctt-base-2026.1-py312 common base environment (numpy, pydantic, pypdf, pypdfium2, pdfplumber)",
+                f"{base_id} common base environment (numpy==2.5.3, pydantic==2.13.5, pypdf==6.19.0, pypdfium2==5.14.0, pdfplumber==0.11.10, scikit-learn==1.9.1)",
             ],
         },
         "notes": "Deterministic CPU-only hybrid retrieval, claim/modality analysis, contradiction detection, and multi-agent Referee TRL adjudication module. No external or team-trained model weights are used.",
@@ -232,28 +262,29 @@ __all__ = ["AssessmentModule"]
     (SUBMISSION_DIR / "declaration.json").write_text(
         json.dumps(declaration_payload, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
     # 8. Write README.md
-    readme_text = """# ARGUS — Official APCTT Stage 1 Assessment Module (`argus-trl-assessor`)
+    readme_text = f"""# ARGUS — Official APCTT Stage 1 Assessment Module (`argus-trl-assessor`)
 
 **Team**: `argus`  
 **Package ID**: `argus-trl-assessor` (`1.0.0`)  
 **Entrypoint**: `participant_module.adapter:AssessmentModule`  
-**Base Environment**: `apctt-base-2026.1-py312`  
+**Base Environment**: `{base_id}` (Development Kit `0.5.0`, CPython `3.12`, `x86_64-manylinux_2_28`)  
 **License**: `MIT`
 
 ## Overview
 
 ARGUS (Automated Readiness Grading & Uncertainty Synthesis) is a domain-independent, deterministic Technology Readiness Level (TRL 1–9) assessment engine. This package connects the official APCTT Stage 1 worker protocol (`apctt-worker-v2`) to the packaged Argus reasoning engine (`participant_module/argus_engine/`):
 
-1. **Multi-Backend Verbatim PDF Page Extraction (`document_processing`)**: Extracts 1-indexed page text via `pypdf`, `pypdfium2`, or `pdfplumber` while preserving exact on-page character substrings for `supporting_span` verification.
+1. **Multi-Backend Verbatim PDF Page Extraction (`document_processing`)**: Extracts 1-indexed page text via `pypdf` (`6.19.0`), `pypdfium2` (`5.14.0`), or `pdfplumber` (`0.11.10`) while preserving exact on-page character substrings for `supporting_span` verification.
 2. **Untrusted Input Sanitization (`trl_core.sanitizer`)**: Strips zero-width/bidirectional Unicode overrides and filters prompt-injection or output-forcing payloads embedded inside PDFs.
 3. **Linguistic Modality, Negation, Simulation & Temporal Analysis (`ml_inference`)**: Distinguishes completed empirical achievements from negated, failed, planned/future, hypothetical, and simulation-only claims, preventing bare `"TRL X"` assertions or keyword stuffing from inflating readiness levels.
-4. **Dynamic Checklist Profiling & Hybrid BM25 Retrieval (`retrieval` + `competition_engine`)**: Dynamically profiles every criterion in `config["checklist"]` (supporting both `apctt-trl-v1` `APCTT-C01`..`APCTT-C12` and custom/modified checklists) and ranks distinct `(document_id, page)` passages.
+4. **Dynamic Checklist Profiling & Hybrid BM25 Retrieval (`retrieval` + `competition_engine`)**: Dynamically profiles every criterion in `config["checklist"]` (supporting both `APCTT-2026-CHECKLIST-v1` `APCTT-C01`..`APCTT-C12` and custom/modified checklists) and ranks distinct `(document_id, page)` passages.
 5. **Contradiction Detection & Multi-Agent Referee Review (`trl_core` + `agent_orchestration`)**: Executes `StructuredClaimExtractor`, `EvidenceQualityAssessor`, `ContradictionDetector`, `CriteriaMapper`, `ReviewProtocol` (`OptimistReviewer`, `SkepticReviewer`, `RefereeAdjudicator`), and `UncertaintyModel`.
 """
-    (SUBMISSION_DIR / "README.md").write_text(readme_text, encoding="utf-8")
+    (SUBMISSION_DIR / "README.md").write_text(readme_text, encoding="utf-8", newline="\n")
 
 
 def main() -> int:

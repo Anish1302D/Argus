@@ -3,7 +3,7 @@
   "team": "argus",
   "package_id": "argus-trl-assessor",
   "package_version": "1.0.0",
-  "declared_package_sha256": "002e2f1e3d56859280b1de2b841e8e74cca51add7c306cdb50ade51512dd51cc",
+  "declared_package_sha256": "35ce55cfff024c62670d77c0fa44c8c89e73d2b9a1b49bf5bdf61f6b8d62dc9d",
   "team_training": "no_team_training",
   "no_team_training": true,
   "training": null,
@@ -44,7 +44,7 @@
     ],
     "reference_assets": [],
     "dependency_declarations": [
-      "apctt-base-2026.1-py312 common base environment (numpy, pydantic, pypdf, pypdfium2, pdfplumber)"
+      "apctt-base-9e7fe1324bb6 common base environment (numpy==2.5.3, pydantic==2.13.5, pypdf==6.19.0, pypdfium2==5.14.0, pdfplumber==0.11.10, scikit-learn==1.9.1)"
     ]
   },
   "notes": "Deterministic CPU-only hybrid retrieval, claim/modality analysis, contradiction detection, and multi-agent Referee TRL adjudication module. No external or team-trained model weights are used."
