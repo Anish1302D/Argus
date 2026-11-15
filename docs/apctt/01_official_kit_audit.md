@@ -32,3 +32,4 @@ Every file listed in `MANIFEST.sha256` was verified against its SHA-256 cryptogr
 - `docs/participant/MODEL_CATALOG.md`
 - `contracts/checklist.official.json`, `contracts/submission.schema.json`, `contracts/license-policy.json`, `contracts/worker-protocol.json`, `contracts/public-cases.json`
 - `tools/make_submission.py`, `tools/check_licenses.py`, `tools/get_public_cases.py`, `tools/make_env.py`, `tools/make_request.py`
+

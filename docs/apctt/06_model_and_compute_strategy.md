@@ -14,3 +14,4 @@
 - Zero external HTTP/API calls, zero runtime downloads, and full compatibility with `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1`.
 - Uses deterministic Okapi BM25 + morphological stem/phrase retrieval (`numpy` + Python stdlib) and rule-grounded evidence adjudication (`models: []` in `submission.json`, `no_team_training: true` in `declaration.json`).
 - LightGBM in `packages/ml_inference` is made optional with a NumPy ridge fallback regressor so the codebase runs cleanly inside `apctt-base-9e7fe1324bb6` without unapproved wheel dependencies.
+

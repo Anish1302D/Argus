@@ -14,3 +14,4 @@ The 3 official diagnostic smoke cases (`USGS-SDG-012`, `USGS-SDG-040`, `USGS-SDG
 - Every `"met"` criterion across all 4 cases cites between 1 and 3 distinct `(document_id, page)` references.
 - Every `supporting_span` is verified to be an exact verbatim substring of its cited page text and never a bare TRL assertion.
 - Every `"insufficient evidence"` criterion provides a specific, non-blank `missing_evidence` explanation.
+

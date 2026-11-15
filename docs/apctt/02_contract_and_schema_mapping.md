@@ -32,3 +32,4 @@ ARGUS never hardcodes criterion IDs (`APCTT-C01..C12`). Every criterion in `conf
 | `abstention_reason` | `None` | `"insufficient evidence" \| "conflicting evidence" \| "ambiguous scope" \| "out of scope"` | `None` |
 | `error_code` | `None` | `None` | Non-blank string (e.g. `"DOCUMENT_UNREADABLE"`) |
 | Optional fields (`confidence`, `uncertainty`, `trl_rationale`, `criterion_rationale`) | Included (`uncertainty` interval `1 <= lower <= predicted_trl <= upper <= 9`) | `trl_rationale` omitted (`E19`); `confidence` & `criterion_rationale` allowed | **All omitted** (`failed_omits_optional`) |
+

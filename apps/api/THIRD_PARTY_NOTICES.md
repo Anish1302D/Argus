@@ -16,3 +16,4 @@ licensed under the MIT License (`LICENSE`).
 - `pdfplumber` / `pdfminer.six` — MIT License
 
 No proprietary, AGPL, GPL, or revenue-capped frontend/backend libraries are used.
+

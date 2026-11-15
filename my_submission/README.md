@@ -23,3 +23,4 @@ ARGUS is a domain-independent, evidence-grounded Technology Readiness Assessment
    Distinguishes completed empirical work from negated, unperformed, failed, or planned/future work, resolves multi-document chronology (`document_date`), and filters out bare TRL number assertions.
 5. **Calibrated TRL Adjudication & Contract Self-Verification**:
    Returns `"completed"` (with integer `predicted_trl` 1–9, `uncertainty` interval, `confidence`, `trl_rationale`, and `criterion_rationale`), `"abstained"` (with exact allowed `abstention_reason`), or `"failed"` (with controlled `error_code` and all optional fields omitted), ensuring every `"met"` criterion cites up to 3 distinct `(document_id, page)` references with verified verbatim `supporting_span`.
+

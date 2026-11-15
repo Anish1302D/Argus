@@ -21,3 +21,4 @@ ARGUS determines a defensible integer Technology Readiness Level (`1 <= predicte
   - `"insufficient evidence"`: Synthetic fixtures (`DEMO-001`) or sparse notes lacking verifiable technical evidence.
 - **Controlled Failure (`assessment_status = "failed"`, `predicted_trl = None`, `abstention_reason = None`):**
   - Triggered on missing/unreadable PDFs (`DOCUMENT_UNREADABLE`, `DOCUMENT_FILE_NOT_FOUND`), empty extracted text (`EMPTY_DOCUMENT_TEXT`), page count mismatch (`PAGE_COUNT_MISMATCH`), or exhausted time budget (`TIME_BUDGET_EXCEEDED`). All optional fields are omitted per `failed_omits_optional`.
+

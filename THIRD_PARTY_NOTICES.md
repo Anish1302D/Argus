@@ -17,3 +17,4 @@ ARGUS is original work by Team Argus licensed under the MIT License (`LICENSE`).
 - `pytest` — MIT License
 
 No AGPL, GPL, SSPL, non-commercial, or proprietary libraries or weights are included.
+

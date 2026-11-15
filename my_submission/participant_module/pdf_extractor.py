@@ -125,3 +125,4 @@ class DocumentExtractor:
 
         extractor_used = "pypdf" if pypdf_pages else ("pypdfium2" if pdfium_pages else "pdfplumber")
         return pages, total_pages, extractor_used
+

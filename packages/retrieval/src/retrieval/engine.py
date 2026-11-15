@@ -357,3 +357,4 @@ def is_bare_trl_assertion(span: str) -> bool:
         ):
             return True
     return False
+

@@ -12,3 +12,4 @@
   ],
   "notes": "ARGUS uses a deterministic, domain-independent evidence extraction, BM25/TF-IDF retrieval, modality/negation analysis, and criterion-grounded TRL adjudication pipeline. No model weights were trained or fine-tuned."
 }
+

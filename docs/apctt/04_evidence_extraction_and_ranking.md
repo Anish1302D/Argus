@@ -19,3 +19,4 @@ Each candidate sentence is analyzed by `analyze_span_modality()`:
 
 ## 4. Top-3 Distinct `(document_id, page)` Ranking
 Under Part B of `MODULE_GUIDE.md` (40% of score), only the first 3 distinct `(document_id, page)` items per `"met"` criterion are evaluated against gold pages. `rank_spans_for_criterion()` deduplicates by `(document_id, page)` and returns at most 3 distinct page references ordered by descending hybrid BM25 + criterion-profile + target-alignment score.
+

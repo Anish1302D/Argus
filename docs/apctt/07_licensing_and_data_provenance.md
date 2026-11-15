@@ -28,3 +28,4 @@ summary: 3 allowed, 0 review, 0 denied -> exit 0
 - `declaration_version`: `"apctt-declaration-v2"`
 - `no_team_training`: `true`
 - `data_sources`: Public-domain USGS Scientific Investigations Reports (`CC0-1.0`) and official APCTT checklist used solely for diagnostic evaluation and schema verification.
+

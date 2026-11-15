@@ -686,3 +686,4 @@ def test_scenario_x_submission_zip_and_fastapi_apctt_endpoints():
     payload = r_smp.json()
     assert payload["success"] is True
     assert payload["result"]["checklist_version"] == "APCTT-2026-CHECKLIST-v1"
+

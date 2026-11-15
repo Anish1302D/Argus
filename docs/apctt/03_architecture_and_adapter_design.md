@@ -16,3 +16,4 @@ ARGUS preserves its modular, domain-independent architecture while adding a firs
    - `determine_case_maturity_and_conflicts()`: Evaluates target scope (`component`, `subsystem`, `system`, `technology`), intended environment, multi-document chronology (`document_date`), and readiness ceiling.
    - `evaluate_criterion_for_case()`: Ranks top 3 distinct `(document_id, page)` references per criterion and determines `met`, `not met`, or `insufficient evidence`.
    - `verify_and_sanitize_result()`: Enforces all 20 official output validation rules (`E01`–`E20`) and verifies verbatim substring presence on each cited page before returning.
+

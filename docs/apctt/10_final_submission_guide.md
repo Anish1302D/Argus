@@ -22,3 +22,4 @@ python apctt-participant-kit-0.5.0-cpu/tools/make_submission.py --check argus_su
 python -m uvicorn api.main:app --app-dir apps/api/src --host 127.0.0.1 --port 8000
 ```
 Open `http://127.0.0.1:8000/#apctt` to access the **08 APCTT Validation Centre** view.
+

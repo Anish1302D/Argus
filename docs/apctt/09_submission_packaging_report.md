@@ -38,3 +38,4 @@ Verification summary:
   - `PASS package hash matches submission.json`
   - `PASS licence: MIT, participant_module/LICENSE present`
   - `result: VALID (exit 0)`
+
