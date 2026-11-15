@@ -102,6 +102,35 @@ SAMPLE_DOCUMENTS: Dict[str, Dict[str, Any]] = {
             "simulation, breadboard, or hardware prototype has been constructed or tested. The equations remain unverified by external peer review."
         ),
     },
+    "contradictory_thermal_report": {
+        "id": "contradictory_thermal_report",
+        "title": "Ablative Aerothermal Shield (Contradictory Claims Demonstration)",
+        "expected_trl": 6,
+        "format": "txt",
+        "content": (
+            "Aerothermal Heat Shield Evaluation for Re-entry Applications\n\n"
+            "Abstract: This report details the flight demonstration of an advanced carbon-phenolic ablator.\n\n"
+            "Facility Arc-Jet Testing: Ground tests were executed in an arc-jet plasma tunnel with 350 W/cm2 heat flux "
+            "and stagnation enthalpy of 22 MJ/kg over 180 seconds in a simulated atmospheric re-entry environment. "
+            "Measured recession rate was 0.08 mm/min and residual flexural strength was 340 MPa.\n\n"
+            "Limitations and Clarifications: However, contrary to the abstract claim, actual suborbital sounding rocket flight "
+            "demonstrations have not yet been performed. The hardware has not yet flown under orbital conditions."
+        ),
+    },
+    "missing_milestones_gap_case": {
+        "id": "missing_milestones_gap_case",
+        "title": "Silicon-Photonic Optical Neural Interconnect (Advancement Gap Case)",
+        "expected_trl": 2,
+        "format": "txt",
+        "content": (
+            "Silicon-Photonic Optical Matrix Accelerator for Low-Power Matrix Multiplication\n\n"
+            "Conceptual Formulation: We present an analytical model and architecture concept for photonic tensor computing. "
+            "Mathematical formulations predict a 10x throughput advantage at 10 GHz clock frequencies.\n\n"
+            "Developmental Status: Practical applications have been identified and documented. "
+            "However, active laboratory experiments and benchtop hardware integration have not yet commenced. "
+            "No proof-of-concept hardware or laboratory breadboard exists to physically validate these analytical models."
+        ),
+    },
 }
 
 
@@ -257,6 +286,16 @@ class DebateEngineService:
                     }
                     for a in final_assessment.implied_prerequisites_audit
                 ],
+                "uncertainty_profile": final_assessment.uncertainty_profile.model_dump() if final_assessment.uncertainty_profile else None,
+                "gap_report": final_assessment.gap_report.model_dump() if final_assessment.gap_report else None,
+                "audit_trail": {
+                    "methodology_version": final_assessment.audit_trail.methodology_version,
+                    "reproducibility_hash": final_assessment.audit_trail.reproducibility_hash,
+                    "records_count": len(final_assessment.audit_trail.records),
+                } if final_assessment.audit_trail else None,
+                "criteria_mappings": [m.model_dump() for m in final_assessment.criteria_mappings],
+                "contradictions": final_assessment.contradictions,
+                "methodology_version": final_assessment.methodology_version,
             },
             "debate": {
                 "rounds": debate_rounds,
@@ -437,6 +476,77 @@ class DebateEngineService:
                 ],
             },
         ]
+
+    def generate_assessment_report(self, result: Dict[str, Any]) -> str:
+        """
+        Generate an exportable, publication-ready technical assessment report (Issue 26).
+        Formats executive summary, final TRL, evidence ledger, criteria mapping,
+        adjudication rationale, gap analysis, and methodology version in Markdown.
+        """
+        doc = result.get("document_info", {})
+        ass = result.get("assessment", {})
+        unc = ass.get("uncertainty_profile", {})
+        gap = ass.get("gap_report", {})
+        aud = ass.get("audit_trail", {})
+        ledger = result.get("evidence_ledger", [])
+        mappings = ass.get("criteria_mappings", [])
+
+        md = []
+        md.append(f"# ARGUS TECHNICAL ASSESSMENT REPORT")
+        md.append(f"**Document Name:** {doc.get('name', 'N/A')}  ")
+        md.append(f"**Evaluated TRL:** TRL {ass.get('predicted_trl')} — {ass.get('trl_title')}  ")
+        md.append(f"**Methodology Version:** {ass.get('methodology_version', '2.0.0-argus')}  ")
+        md.append(f"**Reproducibility Hash:** `{aud.get('reproducibility_hash', 'N/A')}`  \n")
+        md.append("---\n")
+
+        md.append("## 1. Executive Summary")
+        md.append(f"{ass.get('justification', '')}\n")
+        md.append(f"- **Required Testing Environment:** {ass.get('required_environment', '')}")
+        md.append(f"- **Composite Certainty Score:** {ass.get('confidence_percent', 0)}%")
+        if unc:
+            md.append(f"- **Extraction Confidence:** {unc.get('extraction_confidence', 0):.2f}")
+            md.append(f"- **Criteria Coverage:** {unc.get('criteria_coverage', 0):.2f}")
+            md.append(f"- **Conflict Penalty:** {unc.get('conflict_penalty', 0):.2f}")
+            md.append(f"- **Calibration Status:** {unc.get('calibration_status', 'UNCALIBRATED_HEURISTIC')}\n")
+
+        md.append("## 2. Canonical Criteria Mapping Checklist")
+        for m in mappings:
+            icon = "[X]" if "SATISFIED" in m.get("status", "") else "[!]" if m.get("status") == "PARTIALLY_SUPPORTED" else "[-]"
+            md.append(f"- {icon} **{m.get('criterion_id')} (TRL {m.get('trl_level')}):** {m.get('criterion_description')}")
+            md.append(f"  *Status:* `{m.get('status')}` | *Rationale:* {m.get('rationale')}")
+        md.append("")
+
+        if ass.get("implied_prerequisites_audit"):
+            md.append("## 3. Implied Prerequisites Audit Ledger")
+            for p in ass["implied_prerequisites_audit"]:
+                md.append(f"- **{p.get('criterion_id')} (TRL {p.get('target_level')}):** {p.get('rationale')}")
+            md.append("")
+
+        md.append("## 4. Advancement Gap Analysis (Target: TRL N+1)")
+        if gap:
+            md.append(f"**Target Next Level:** TRL {gap.get('target_next_trl', 'N/A')}  ")
+            md.append(f"**Required Environment:** {gap.get('required_environment', 'N/A')}  \n")
+            md.append("### Missing Criteria:")
+            for mc in gap.get("missing_criteria", []):
+                md.append(f"- {mc}")
+            md.append("\n### Actionable Engineering Recommendations:")
+            for rec in gap.get("recommended_activities", []):
+                md.append(f"1. {rec}")
+            if gap.get("blockers"):
+                md.append("\n### Active Blockers / Contradictions:")
+                for bl in gap.get("blockers", []):
+                    md.append(f"- {bl}")
+        md.append("")
+
+        md.append("## 5. Technical Evidence Ledger")
+        md.append("| Evidence ID | Target TRL | Category | Strength | Source Location | Excerpt |")
+        md.append("|---|---|---|---|---|---|")
+        for e in ledger[:15]:
+            snippet = e.get("text", "").replace("\n", " ")[:80] + "..."
+            md.append(f"| {e.get('id')} | TRL {e.get('target_trl', '-')} | {e.get('category')} | {e.get('strength')} | P.{e.get('page')} ({e.get('section')}) | {snippet} |")
+        md.append("\n---\n*Report generated deterministically by ARGUS Research Intelligence Engine.*")
+
+        return "\n".join(md)
 
 
 # Singleton Service Instance
